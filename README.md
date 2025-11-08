@@ -5,7 +5,7 @@
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
 [![Type Hints](https://img.shields.io/badge/Type%20Hints-100%25-green.svg)](https://docs.python.org/3/library/typing.html)
 
-> Official API specification for Circular Protocol blockchain operations
+> Official API specification for Circular Protocol blockchain operations and wallet management
 
 Official Python SDK for interacting with Circular Protocol blockchain networks. Provides a fully typed, async-ready API for wallet operations, transactions, smart contracts, assets, and more.
 

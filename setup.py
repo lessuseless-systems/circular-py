@@ -48,7 +48,7 @@ extras_require["all"] = sum(extras_require.values(), [])
 setup(
     name="circular-protocol-api",
     version=version,
-    description="Official API specification for Circular Protocol blockchain operations",
+    description="Official API specification for Circular Protocol blockchain operations and wallet management",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Danny De Novi",
