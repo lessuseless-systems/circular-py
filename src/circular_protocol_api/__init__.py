@@ -18,6 +18,10 @@ Example:
 from typing import Dict, List, Optional, TypedDict
 import requests
 import json
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.backends import default_backend
+import hashlib
 
 
 # ============================================================================
@@ -253,40 +257,57 @@ class CircularProtocolAPI:
         self.api_key = api_key
         self.version = '2.0.0-alpha.1'
         self.session = requests.Session()
+        self.headers = {}
 
         if self.api_key:
             self.session.headers['Authorization'] = f'Bearer {self.api_key}'
 
         self.session.headers['Content-Type'] = 'application/json'
+        self._nag_url = 'https://nag.circularlabs.io/NAG.php?cep='
+        self._nag_key = ''
+        self._last_error = ''
 
-    def _make_request(
-        self,
-        endpoint: str,
-        data: Optional[Dict[str, object]] = None
-    ) -> Dict[str, object]:
+    def _make_request(self, endpoint: str, data: dict = None) -> dict:
         """
-        Make an HTTP request to the API
-
+        Make HTTP request to NAG endpoint
+    
         Args:
-            endpoint: API endpoint path
+            endpoint: Endpoint name (e.g., 'GetBlockchains')
             data: Request payload
-
+    
         Returns:
-            Parsed JSON response
-
+            API response
+    
         Raises:
-            requests.exceptions.RequestException: If the request fails
+            Exception: If API request fails
         """
-        url = f'{self.base_url}{endpoint}'
-
-        try:
-            response = self.session.post(url, json=data)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            raise requests.exceptions.RequestException(
-                f'API request failed: {e}'
-            ) from e
+        url = f'{self._nag_url}Circular_{endpoint}_'
+    
+        headers = {
+            'Content-Type': 'application/json',
+            **self.headers,
+        }
+    
+        # Add NAG key if set
+        if self._nag_key:
+            headers['X-NAG-Key'] = self._nag_key
+    
+        response = requests.post(
+            url,
+            json=data or {},
+            headers=headers
+        )
+    
+        if not response.ok:
+            raise Exception(f'API error: {response.status_code} {response.reason}')
+    
+        result = response.json()
+    
+        # Check for API-level errors
+        if result.get('Result') != 200:
+            raise Exception(result.get('Response', 'API request failed'))
+    
+        return result.get('Response', {})
 
     def _build_url(self, endpoint: str) -> str:
         """
@@ -916,6 +937,315 @@ Returns information about all active and inactive blockchains.
             "Version": self.version,
         }
         return self._make_request('/getBlockchains', data)
+
+    # ============================================================================
+    # Helper Methods - Cryptography
+    # ============================================================================
+
+    def sign_message(self, message: str, private_key: str) -> str:
+        """
+        Sign a message using secp256k1
+    
+        Args:
+            message: Message to sign
+            private_key: Private key in hex format (with or without '0x' prefix)
+    
+        Returns:
+            Signature as hex string (r||s format, 64 bytes)
+        """
+        private_key_bytes = bytes.fromhex(self.hex_fix(private_key))
+        private_key_int = int.from_bytes(private_key_bytes, byteorder='big')
+        sk = ec.derive_private_key(private_key_int, ec.SECP256K1(), default_backend())
+    
+        # Hash message once (matching TypeScript sha256 behavior)
+        msg_hash = hashlib.sha256(message.encode()).digest()
+    
+        # Sign with Prehashed to avoid double-hashing (sk.sign would hash again otherwise)
+        from cryptography.hazmat.primitives.asymmetric.utils import Prehashed, decode_dss_signature
+        signature_der = sk.sign(msg_hash, ec.ECDSA(Prehashed(hashes.SHA256())))
+    
+        # Convert DER to raw r||s format for consistency with TypeScript
+        r, s = decode_dss_signature(signature_der)
+        signature_bytes = r.to_bytes(32, 'big') + s.to_bytes(32, 'big')
+        return signature_bytes.hex()
+
+    def verify_signature(self, public_key: str, message: str, signature: str) -> bool:
+        """
+        Verify a signature
+    
+        Args:
+            public_key: Public key in hex format (uncompressed, 64 bytes)
+            message: Original message that was signed
+            signature: Signature in hex format (r||s format, 64 bytes)
+    
+        Returns:
+            True if signature is valid, False otherwise
+        """
+        try:
+            public_key_bytes = bytes.fromhex(self.hex_fix(public_key))
+            # Add uncompressed point prefix if needed (0x04)
+            if len(public_key_bytes) == 64:
+                public_key_bytes = b'\x04' + public_key_bytes
+    
+            vk = ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP256K1(), public_key_bytes)
+    
+            # Hash message once (matching TypeScript sha256 behavior)
+            msg_hash = hashlib.sha256(message.encode()).digest()
+    
+            # Convert r||s format to DER
+            signature_bytes = bytes.fromhex(signature)
+            r = int.from_bytes(signature_bytes[:32], 'big')
+            s = int.from_bytes(signature_bytes[32:], 'big')
+    
+            from cryptography.hazmat.primitives.asymmetric.utils import Prehashed, encode_dss_signature
+            signature_der = encode_dss_signature(r, s)
+    
+            # Verify with Prehashed to match signing behavior
+            vk.verify(signature_der, msg_hash, ec.ECDSA(Prehashed(hashes.SHA256())))
+            return True
+        except Exception:
+            return False
+
+    def get_public_key(self, private_key: str) -> str:
+        """
+        Derive public key from private key
+    
+        Args:
+            private_key: Private key in hex format (with or without '0x' prefix)
+    
+        Returns:
+            Public key in uncompressed hex format (64 bytes, without 0x04 prefix)
+        """
+        private_key_bytes = bytes.fromhex(self.hex_fix(private_key))
+        private_key_int = int.from_bytes(private_key_bytes, byteorder='big')
+        sk = ec.derive_private_key(private_key_int, ec.SECP256K1(), default_backend())
+        vk = sk.public_key()
+        public_key_bytes = vk.public_bytes(
+            encoding=serialization.Encoding.X962,
+            format=serialization.PublicFormat.UncompressedPoint
+        )
+        # Remove the 0x04 prefix to match TypeScript output
+        return public_key_bytes[1:].hex()
+
+    def hash_string(self, string: str) -> str:
+        """
+        Compute SHA256 hash of a string
+    
+        Args:
+            string: String to hash
+    
+        Returns:
+            SHA256 hash as hex string
+        """
+        return hashlib.sha256(string.encode()).hexdigest()
+
+    # ============================================================================
+    # Helper Methods - Encoding
+    # ============================================================================
+
+    def hex_fix(self, hex_string: str) -> str:
+        """
+        Normalize hex strings (remove 0x prefix if present)
+    
+        Args:
+            hex_string: Hex string with or without 0x prefix
+    
+        Returns:
+            Normalized hex string without 0x prefix
+        """
+        if hex_string.startswith('0x') or hex_string.startswith('0X'):
+            return hex_string[2:]
+        return hex_string
+
+    def string_to_hex(self, string: str) -> str:
+        """
+        Convert string to hex encoding
+    
+        Args:
+            string: String to convert
+    
+        Returns:
+            Hex-encoded string
+        """
+        return string.encode('utf-8').hex()
+
+    def hex_to_string(self, hex_string: str) -> str:
+        """
+        Convert hex encoding to string
+    
+        Args:
+            hex_string: Hex-encoded string
+    
+        Returns:
+            Decoded string
+        """
+        normalized = self.hex_fix(hex_string)
+        return bytes.fromhex(normalized).decode('utf-8')
+
+    def _pad_number(self, num: int) -> str:
+        """
+        Pad number with leading zero if single digit
+    
+        Args:
+            num: Number to pad
+    
+        Returns:
+            Padded string
+        """
+        return f'{num:02d}'
+
+    def get_formatted_timestamp(self) -> str:
+        """
+        Get current timestamp in Circular Protocol format
+        Format: YYYY:MM:DD-hh:mm:ss (UTC)
+    
+        Returns:
+            Formatted timestamp string
+        """
+        from datetime import datetime
+    
+        now = datetime.utcnow()
+        year = now.year
+        month = self._pad_number(now.month)
+        day = self._pad_number(now.day)
+        hours = self._pad_number(now.hour)
+        minutes = self._pad_number(now.minute)
+        seconds = self._pad_number(now.second)
+    
+        return f'{year}:{month}:{day}-{hours}:{minutes}:{seconds}'
+
+    # ============================================================================
+    # Helper Methods - Configuration
+    # ============================================================================
+
+    def set_nag_url(self, url: str) -> None:
+        """
+        Set custom NAG endpoint URL
+    
+        Args:
+            url: NAG endpoint URL
+        """
+        self._nag_url = url
+
+    def get_nag_url(self) -> str:
+        """
+        Get current NAG endpoint URL
+    
+        Returns:
+            Current NAG URL
+        """
+        return self._nag_url
+
+    def set_nag_key(self, key: str) -> None:
+        """
+        Set NAG API key for authenticated requests
+    
+        Args:
+            key: API key
+        """
+        self._nag_key = key
+
+    def get_nag_key(self) -> str:
+        """
+        Get current NAG API key
+    
+        Returns:
+            Current NAG key
+        """
+        return self._nag_key
+
+    # ============================================================================
+    # Helper Methods - Advanced
+    # ============================================================================
+
+    def get_error(self) -> str:
+        """
+        Get last error message
+    
+        Returns:
+            Last error message
+        """
+        return self._last_error
+
+    def _handle_error(self, error: Exception | str) -> None:
+        """
+        Handle error and store error message
+    
+        Args:
+            error: Error object or string
+        """
+        if isinstance(error, Exception):
+            self._last_error = str(error)
+        elif isinstance(error, str):
+            self._last_error = error
+        else:
+            self._last_error = 'Unknown error'
+
+    def get_transaction_outcome(
+        self,
+        blockchain: str,
+        tx_id: str,
+        start: str,
+        end: str,
+        timeout_sec: int = 120,
+        interval_sec: int = 5
+    ) -> dict:
+        """
+        Poll for transaction confirmation
+        NOTE: Currently uses correct schema with BlockNumber
+    
+        Args:
+            blockchain: Blockchain network (e.g., 'MainNet', 'testnet')
+            tx_id: Transaction ID to monitor
+            start: Start block number for search
+            end: End block number for search
+            timeout_sec: Maximum time to wait in seconds (default: 120)
+            interval_sec: Polling interval in seconds (default: 5)
+    
+        Returns:
+            Transaction response when confirmed
+    
+        Raises:
+            Exception: If transaction fails or times out
+        """
+        import time
+    
+        start_time = time.time()
+    
+        while True:
+            # Check if timeout exceeded
+            elapsed = time.time() - start_time
+            if elapsed >= timeout_sec:
+                error = f'Transaction {tx_id} timed out after {timeout_sec} seconds'
+                self._handle_error(error)
+                raise Exception(error)
+    
+            try:
+                # Check transaction status
+                tx = self.get_transaction_by_id({
+                    'Blockchain': blockchain,
+                    'ID': tx_id,
+                    'Start': start,
+                    'End': end,
+                    'Version': '2.0.0-alpha.1',
+                })
+    
+                # Check if transaction is confirmed (has BlockNumber)
+                if tx.get('Response') and tx['Response'].get('BlockNumber') and tx['Response']['BlockNumber'] > 0:
+                    # Transaction confirmed
+                    return tx
+    
+                # Still pending, wait before next check
+                time.sleep(interval_sec)
+    
+            except Exception as error:
+                # If error is not just "pending", rethrow
+                if 'pending' not in str(error).lower():
+                    self._handle_error(error)
+                    raise error
+    
+                # Otherwise, wait and retry
+                time.sleep(interval_sec)
 
 
 # ============================================================================
