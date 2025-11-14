@@ -1,256 +1,207 @@
-# Circular Protocol API - Python SDK
+# Circular Protocol - Python SDK
 
-[![PyPI version](https://img.shields.io/pypi/v/circular-protocol-api.svg)](https://pypi.org/project/circular-protocol-api/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
-[![Type Hints](https://img.shields.io/badge/Type%20Hints-100%25-green.svg)](https://docs.python.org/3/library/typing.html)
+[![PyPI version](https://img.shields.io/pypi/v/circular-protocol.svg)](https://pypi.org/project/circular-protocol/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> Official API specification for Circular Protocol blockchain operations and wallet management
+The **Circular Protocol Python SDK** is the official Python library for seamless integration with the Circular blockchain ecosystem. This open-source SDK provides a comprehensive suite of tools for efficient and secure interaction with blockchain networks, managing wallets, assets, smart contracts, and more.
 
-Official Python SDK for interacting with Circular Protocol blockchain networks. Provides a fully typed, async-ready API for wallet operations, transactions, smart contracts, assets, and more.
+## 🔥 Key Features
 
-**Version:** 2.0.0-alpha.1
-
-## Features
-
-- 🔒 **Fully Typed** - 100% type hints coverage, zero `Any` types
-- 🐍 **Python 3.8+** - Modern Python with dataclasses and type hints
-- 🚀 **Async Support** - Both sync and async APIs (with aiohttp)
-- 🎯 **24 API Methods** - Complete coverage of Circular Protocol operations
-- ✅ **Runtime Validation** - Pydantic models for request/response validation
-- 📝 **Auto-Generated** - Generated from canonical Nickel specifications
-- 🧪 **Well-Tested** - Comprehensive unit and integration tests
-
-## Installation
-
-### Basic Installation
+- **Blockchain Interaction**: Connect and interact with Circular's blockchain networks
+- **Smart Contracts**: Deploy, test, and interact with smart contracts
+- **Wallet Management**: Create, retrieve, and manage blockchain wallets with balance tracking
+- **Asset Management**: Issue and manage assets, handle transfers, and retrieve supply information
+- **Domain Management**: Resolve blockchain domain names to wallet addresses
+- **Transaction Management**: Send transactions, track status, and search the blockchain
+- **Analytics**: Access blockchain performance data and insights
+- **Cryptographic Helpers**: Built-in utilities for key generation, signing, and hashing
+- **Async/Await Support**: Full async/await support with aiohttp
+- **Type Hints**: Comprehensive type annotations for better IDE support
 
 ```bash
-pip install circular-protocol-api
+pip install circular-protocol
 ```
 
-### With Async Support
+Or with poetry:
 
 ```bash
-pip install circular-protocol-api[async]
+poetry add circular-protocol
 ```
 
-### Development Installation
+Or with pipenv:
 
 ```bash
-pip install circular-protocol-api[dev]
+pipenv install circular-protocol
 ```
 
-## Quick Start
-
-### Basic Usage
+## 🚀 Quick Start
 
 ```python
-from circular_protocol_api import CircularProtocolAPI
-
-# Initialize the client
-api = CircularProtocolAPI(base_url="https://api.circular.org")
-
-# Check if a wallet exists
-result = api.check_wallet(address="0x1234567890abcdef...")
-print(f"Wallet exists: {result['exists']}")
-
-# Get wallet details
-wallet = api.get_wallet(address="0x1234567890abcdef...")
-print(f"Balance: {wallet['balance']}")
-
-# Get wallet balance
-balance = api.get_wallet_balance(address="0x1234567890abcdef...")
-print(f"Current balance: {balance['balance']}")
-```
-
-### Async Usage
-
-```python
-import asyncio
-from circular_protocol_api import AsyncCircularProtocolAPI
+from circular_protocol import CircularProtocolAPI, CircularAPIException
 
 async def main():
-    # Initialize async client
-    async with AsyncCircularProtocolAPI(base_url="https://api.circular.org") as api:
-        # Check wallet
-        result = await api.check_wallet(address="0x1234567890abcdef...")
-        print(f"Wallet exists: {result['exists']}")
+    # Initialize the API client
+    api = CircularProtocolAPI(
+        nag_url='https://nag.circularlabs.io/NAG.php?cep=',
+        nag_key='your-api-key'  # Optional
+    )
 
-        # Get wallet details
-        wallet = await api.get_wallet(address="0x1234567890abcdef...")
-        print(f"Balance: {wallet['balance']}")
+    try:
+        # Check if a wallet exists
+        result = await api.check_wallet({
+            'Address': '0xd55872dbe508fd27445889b9d81bbc9411bb0f1353153a249f2fb34ef2690310',
+            'Blockchain': 'MainNet',
+            'Version': '1.0.8'
+        })
 
-# Run async function
+        print(f"Wallet exists: {result['Response']}")
+    except CircularAPIException as e:
+        print(f"API Error: {e.message}")
+    finally:
+        await api.close()
+
+# Run with asyncio
+import asyncio
 asyncio.run(main())
 ```
 
-### Context Manager Support
+## 📜 API Reference
 
-```python
-from circular_protocol_api import CircularProtocolAPI
+The Circular Protocol Python SDK provides **39 methods** across multiple categories for comprehensive blockchain interaction.
 
-# Automatic resource cleanup
-with CircularProtocolAPI(base_url="https://api.circular.org") as api:
-    wallet = api.check_wallet(address="0x1234567890abcdef...")
-    print(f"Wallet exists: {wallet['exists']}")
-```
+### Wallet Operations (5 methods)
 
-## API Reference
+- **`checkWallet`** - Verify wallet existence on the blockchain
+- **`getWallet`** - Retrieve complete wallet details and metadata
+- **`getLatestTransactions`** - Get recent wallet activity and transaction history
+- **`getWalletBalance`** - Query current wallet balance across assets
+- **`getWalletNonce`** - Get transaction nonce for the wallet
 
-### Wallet Operations
+### Transaction Operations (6 methods)
 
-| `check_wallet()` | Check if wallet exists | POST |
-| `get_wallet()` | Get wallet information | POST |
-| `get_latest_transactions()` | Get latest transactions for wallet | POST |
-| `get_wallet_balance()` | Get wallet balance for specific asset | POST |
-| `get_wallet_nonce()` | Get wallet nonce | POST |
-| `register_wallet()` | Register wallet on blockchain | POST |
+- **`sendTransaction`** - Submit new transaction to the blockchain
+- **`getPendingTransaction`** - Check transaction status in the mempool
+- **`getTransactionbyID`** - Query transaction by unique identifier
+- **`getTransactionbyNode`** - Query transactions by validator node
+- **`getTransactionbyAddress`** - Query all transactions for a wallet address
+- **`getTransactionbyDate`** - Query transactions within a date range
 
-### Transaction Operations
+### Block Operations (4 methods)
 
-| `send_transaction()` | Submit transaction to blockchain | POST |
-| `get_transaction_by_id()` | Find transaction by ID | POST |
-| `get_transaction_by_node()` | Find transactions by node ID | POST |
-| `get_transaction_by_address()` | Find transactions by address | POST |
-| `get_transaction_by_date()` | Find transactions by date range | POST |
-| `get_pending_transaction()` | Get pending transaction by ID | POST |
+- **`getBlock`** - Retrieve block data by block number or hash
+- **`getBlockRange`** - Query multiple blocks within a range
+- **`getBlockCount`** - Get current blockchain height (latest block number)
+- **`getAnalytics`** - Retrieve blockchain performance metrics and analytics
 
-### Block Operations
+### Contract Operations (2 methods)
 
-| `get_block()` | Get specific block | POST |
-| `get_block_range()` | Get range of blocks | POST |
-| `get_block_count()` | Get blockchain height | POST |
-| `get_analytics()` | Get blockchain analytics | POST |
+- **`testContract`** - Validate smart contract logic before deployment
+- **`callContract`** - Execute smart contract function call
 
-### Asset Operations
+### Asset Operations (4 methods)
 
-| `get_asset_list()` | List all assets on blockchain | POST |
-| `get_asset()` | Get specific asset information | POST |
-| `get_asset_supply()` | Get asset supply information | POST |
-| `get_voucher()` | Retrieve voucher information | POST |
+- **`getAssetList`** - List all available assets on the blockchain
+- **`getAsset`** - Get detailed asset information and metadata
+- **`getAssetSupply`** - Query total and circulating supply for an asset
+- **`getVoucher`** - Retrieve voucher data and redemption details
 
-### Contract Operations
+### Domain Operations (1 method)
 
-| `test_contract()` | Test smart contract execution | POST |
-| `call_contract()` | Call smart contract function | POST |
+- **`getDomain`** - Query blockchain domain registry (resolve domain to address)
 
-### Domain Operations
+### Network Operations (1 method)
 
-| `get_domain()` | Resolve domain to wallet address | POST |
-
-### Network Operations
-
-| `get_blockchains()` | List available blockchains | POST |
-
-## Advanced Usage
-
-### Custom Configuration
-
-```python
-from circular_protocol_api import CircularProtocolAPI, CircularProtocolConfig
-
-# Create custom configuration
-config = CircularProtocolConfig(
-    base_url="https://api.circular.org",
-    timeout=30,  # Request timeout in seconds
-    headers={"User-Agent": "MyApp/1.0"},
-    verify_ssl=True,
-)
-
-# Initialize with custom config
-api = CircularProtocolAPI(config=config)
-```
-
-### Error Handling
-
-```python
-from circular_protocol_api import CircularProtocolAPI, CircularAPIError
-
-api = CircularProtocolAPI(base_url="https://api.circular.org")
-
-try:
-    wallet = api.get_wallet(address="invalid_address")
-except CircularAPIError as e:
-    print(f"API Error: {e.message}")
-    print(f"Status Code: {e.status_code}")
-    print(f"Endpoint: {e.endpoint}")
-except ValueError as e:
-    print(f"Validation Error: {e}")
-```
-
-### Type Hints
-
-The SDK is fully typed with comprehensive type hints:
-
-```python
-from typing import Dict, List, Any
-from circular_protocol_api import CircularProtocolAPI
-
-api: CircularProtocolAPI = CircularProtocolAPI(base_url="https://api.circular.org")
-
-# Return types are fully typed
-wallet: Dict[str, Any] = api.get_wallet(address="0x1234...")
-transactions: List[Dict[str, Any]] = api.get_latest_transactions(address="0x1234...")
-```
-
-## Development
-
-### Running Tests
-
-```bash
-# Install development dependencies
-pip install -e .[dev]
-
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=circular_protocol_api --cov-report=html
-
-# Run only unit tests
-pytest -m unit
-
-# Run only integration tests
-pytest -m integration
-```
-
-### Code Quality
-
-```bash
-# Format code
-black src/ tests/
-
-# Lint code
-ruff check src/ tests/
-
-# Type check
-mypy src/
-```
-
-## Contributing
-
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Links
-
-- [Documentation](https://docs.circular.org)
-- [GitHub Repository](https://github.com/circular-protocol/circular-protocol-py)
-- [Issue Tracker](https://github.com/circular-protocol/circular-protocol-py/issues)
-- [Changelog](https://github.com/circular-protocol/circular-protocol-py/blob/main/CHANGELOG.md)
-- [Circular Protocol](https://circular.org)
-
-## Support
-
-For support and questions:
-- Open an issue on [GitHub](https://github.com/circular-protocol/circular-protocol-py/issues)
-- Check the [documentation](https://docs.circular.org)
-- Join our community discussions
+- **`getBlockchains`** - List all supported blockchain networks
 
 ---
 
-Generated with ❤️ from [Nickel specifications](https://github.com/circular-protocol/circular-canonical)
+### Cryptographic Helpers (5 methods)
+
+- **`signMessage`** - Generate ECDSA secp256k1 signatures (DER format)
+- **`verifySignature`** - Verify message signatures against public keys
+- **`getPublicKey`** - Derive public key from private key (128 hex characters, uncompressed, no 0x04 prefix)
+- **`hashString`** - Generate SHA-256 hash of string input
+- **`getFormattedTimestamp`** - Get current UTC timestamp in Circular Protocol format (`YYYY:MM:DD-HH:mm:ss`)
+
+**Implementation Details:**
+- **TypeScript/JavaScript**: `crypto-browserify` (browser-compatible)
+- **Python**: `ecdsa` + `hashlib` (standard library)
+- **Java**: Bouncy Castle library for secp256k1
+- **PHP**: `phpseclib3` elliptic curve cryptography
+- **Go**: `btcsuite/btcd/btcec/v2` secp256k1
+- **Dart**: `pointycastle` package
+
+---
+
+### Encoding Helpers (4 methods)
+
+- **`hexFix`** - Normalize hex strings (remove `0x` prefix if present)
+- **`stringToHex`** - Convert UTF-8 string to hexadecimal encoding
+- **`hexToString`** - Convert hexadecimal string to UTF-8
+- **`padNumber`** - Zero-pad single-digit numbers (e.g., `5` → `"05"`)
+
+---
+
+### Advanced Helpers (3 methods)
+
+- **`GetError`** - Retrieve last error message from SDK
+- **`handleError`** - Internal error tracking and logging
+- **`getTransactionOutcome`** - Poll for transaction confirmation with automatic retries
+
+**Transaction Polling Behavior:**
+- Checks transaction status every **5 seconds** (configurable via `intervalSec`)
+- Returns successfully when transaction has `BlockNumber > 0` (confirmed)
+- Throws timeout error after **120 seconds** (configurable via `timeoutSec`)
+- Handles "pending" status gracefully with automatic retries
+- Distinguishes between temporary "pending" and permanent errors
+
+---
+
+### Convenience Methods (1 method)
+
+- **`registerWallet`** - Simplified wallet registration (wraps `sendTransaction`)
+
+**Implementation:**
+- Automatically derives `From` and `To` addresses via `hashString(publicKey)`
+- Constructs transaction payload: `{"Action": "CP_WALLET", "PublicKey": "..."}`
+- Sets default values: `Nonce="00000000"`, `Type="C"`, `Signature="0000..."`
+- Calculates transaction ID as SHA-256 hash of transaction fields
+- Returns same response structure as `sendTransaction`
+
+---
+
+## 📊 Total Methods: 39
+
+- **23** API Endpoint Methods
+- **5** Cryptographic Helpers
+- **4** Encoding Helpers
+- **3** Advanced Helpers
+- **3** Configuration Methods (getNagUrl, setNagUrl, getNagKey, setNagKey, setHeader, etc.)
+- **1** Convenience Method
+
+> **Note**: For detailed parameter types, response structures, and advanced usage examples, refer to the **[Python SDK Documentation](https://circular-protocol.gitbook.io/circular-sdk/api-docs/python)**.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please see the [CONTRIBUTING.md](https://github.com/circular-protocol/circular-canonical/blob/main/CONTRIBUTING.md) file in the canonical repository for guidelines.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📚 Resources
+
+- **[Python SDK Documentation](https://circular-protocol.gitbook.io/circular-sdk/api-docs/python)** - Complete API reference
+- **[Circular Protocol Docs](https://circular-protocol.gitbook.io)** - Protocol documentation
+- **[Circular Canonical](https://github.com/circular-protocol/circular-canonical)** - Single source of truth
+- **[Package on PyPI](https://pypi.org/project/circular-protocol/)** - Official Python package
+
+## ℹ️ About
+
+**Version**: 1.0.8
+**License**: MIT
+**Generated**: Auto-generated from [Circular Canonical](https://github.com/circular-protocol/circular-canonical) specification
+
+---
+
+© 2025 Circular Global Ledgers, Inc. - Open source for private and commercial use

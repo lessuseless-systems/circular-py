@@ -1,4 +1,25 @@
 jobs:
+  e2e-tests:
+    if: github.event_name == 'push' || github.event_name == 'schedule'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install dependencies
+      run: pip install -e .[dev]
+    - continue-on-error: true
+      env:
+        CIRCULAR_API_KEY: ${{ secrets.CIRCULAR_API_KEY }}
+        CIRCULAR_NAG_URL: ${{ secrets.CIRCULAR_NAG_URL }}
+        CIRCULAR_TEST_ADDRESS: ${{ secrets.CIRCULAR_TEST_ADDRESS }}
+        CIRCULAR_TEST_BLOCKCHAIN: ${{ secrets.CIRCULAR_TEST_BLOCKCHAIN }}
+      name: Run E2E tests (read-only)
+      run: pytest tests/test_e2e.py -v -m e2e
   publish-alpha:
     if: github.ref == 'refs/heads/development' && github.event_name == 'push'
     needs: test
@@ -57,8 +78,8 @@ jobs:
     - continue-on-error: true
       name: Type check (mypy)
       run: mypy src/ --strict
-    - name: Run tests
-      run: pytest -v
+    - name: Run unit tests
+      run: pytest tests/test_unit.py -v
     - name: Build package
       run: python -m build
     strategy:
