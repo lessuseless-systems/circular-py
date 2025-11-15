@@ -20,7 +20,7 @@ from ._helpers import (
     get_nag_url,
     set_nag_key,
     get_nag_key,
-    GetError,
+    get_error,
     handle_error,
     get_transaction_outcome,
 )
@@ -234,9 +234,9 @@ class CircularProtocolAPI:
         """Get NAG API key."""
         return get_nag_key(self)
 
-    def GetError(self, code: int) -> str:
+    def get_error(self, code: int) -> str:
         """Get error message for result code."""
-        return GetError(code)
+        return get_error(code)
 
     def handle_error(self, result: Dict) -> None:
         """Handle API error responses."""

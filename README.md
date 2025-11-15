@@ -71,57 +71,57 @@ The Circular Protocol Python SDK provides **39 methods** across multiple categor
 
 ### Wallet Operations (5 methods)
 
-- **`checkWallet`** - Verify wallet existence on the blockchain
-- **`getWallet`** - Retrieve complete wallet details and metadata
-- **`getLatestTransactions`** - Get recent wallet activity and transaction history
-- **`getWalletBalance`** - Query current wallet balance across assets
-- **`getWalletNonce`** - Get transaction nonce for the wallet
+- **`check_wallet`** - Verify wallet existence on the blockchain
+- **`get_wallet`** - Retrieve complete wallet details and metadata
+- **`get_latest_transactions`** - Get recent wallet activity and transaction history
+- **`get_wallet_balance`** - Query current wallet balance across assets
+- **`get_wallet_nonce`** - Get transaction nonce for the wallet
 
 ### Transaction Operations (6 methods)
 
-- **`sendTransaction`** - Submit new transaction to the blockchain
-- **`getPendingTransaction`** - Check transaction status in the mempool
-- **`getTransactionbyID`** - Query transaction by unique identifier
-- **`getTransactionbyNode`** - Query transactions by validator node
-- **`getTransactionbyAddress`** - Query all transactions for a wallet address
-- **`getTransactionbyDate`** - Query transactions within a date range
+- **`send_transaction`** - Submit new transaction to the blockchain
+- **`get_pending_transaction`** - Check transaction status in the mempool
+- **`get_transaction_by_id`** - Query transaction by unique identifier
+- **`get_transaction_by_node`** - Query transactions by validator node
+- **`get_transaction_by_address`** - Query all transactions for a wallet address
+- **`get_transaction_by_date`** - Query transactions within a date range
 
 ### Block Operations (4 methods)
 
-- **`getBlock`** - Retrieve block data by block number or hash
-- **`getBlockRange`** - Query multiple blocks within a range
-- **`getBlockCount`** - Get current blockchain height (latest block number)
-- **`getAnalytics`** - Retrieve blockchain performance metrics and analytics
+- **`get_block`** - Retrieve block data by block number or hash
+- **`get_block_range`** - Query multiple blocks within a range
+- **`get_block_count`** - Get current blockchain height (latest block number)
+- **`get_analytics`** - Retrieve blockchain performance metrics and analytics
 
 ### Contract Operations (2 methods)
 
-- **`testContract`** - Validate smart contract logic before deployment
-- **`callContract`** - Execute smart contract function call
+- **`test_contract`** - Validate smart contract logic before deployment
+- **`call_contract`** - Execute smart contract function call
 
 ### Asset Operations (4 methods)
 
-- **`getAssetList`** - List all available assets on the blockchain
-- **`getAsset`** - Get detailed asset information and metadata
-- **`getAssetSupply`** - Query total and circulating supply for an asset
-- **`getVoucher`** - Retrieve voucher data and redemption details
+- **`get_asset_list`** - List all available assets on the blockchain
+- **`get_asset`** - Get detailed asset information and metadata
+- **`get_asset_supply`** - Query total and circulating supply for an asset
+- **`get_voucher`** - Retrieve voucher data and redemption details
 
 ### Domain Operations (1 method)
 
-- **`getDomain`** - Query blockchain domain registry (resolve domain to address)
+- **`get_domain`** - Query blockchain domain registry (resolve domain to address)
 
 ### Network Operations (1 method)
 
-- **`getBlockchains`** - List all supported blockchain networks
+- **`get_blockchains`** - List all supported blockchain networks
 
 ---
 
 ### Cryptographic Helpers (5 methods)
 
-- **`signMessage`** - Generate ECDSA secp256k1 signatures (DER format)
-- **`verifySignature`** - Verify message signatures against public keys
-- **`getPublicKey`** - Derive public key from private key (128 hex characters, uncompressed, no 0x04 prefix)
-- **`hashString`** - Generate SHA-256 hash of string input
-- **`getFormattedTimestamp`** - Get current UTC timestamp in Circular Protocol format (`YYYY:MM:DD-HH:mm:ss`)
+- **`sign_message`** - Generate ECDSA secp256k1 signatures (DER format)
+- **`verify_signature`** - Verify message signatures against public keys
+- **`get_public_key`** - Derive public key from private key (128 hex characters, uncompressed, no 0x04 prefix)
+- **`hash_string`** - Generate SHA-256 hash of string input
+- **`get_formatted_timestamp`** - Get current UTC timestamp in Circular Protocol format (`YYYY:MM:DD-HH:mm:ss`)
 
 **Implementation Details:**
 - **TypeScript/JavaScript**: `crypto-browserify` (browser-compatible)
@@ -135,23 +135,23 @@ The Circular Protocol Python SDK provides **39 methods** across multiple categor
 
 ### Encoding Helpers (4 methods)
 
-- **`hexFix`** - Normalize hex strings (remove `0x` prefix if present)
-- **`stringToHex`** - Convert UTF-8 string to hexadecimal encoding
-- **`hexToString`** - Convert hexadecimal string to UTF-8
-- **`padNumber`** - Zero-pad single-digit numbers (e.g., `5` → `"05"`)
+- **`hex_fix`** - Normalize hex strings (remove `0x` prefix if present)
+- **`string_to_hex`** - Convert UTF-8 string to hexadecimal encoding
+- **`hex_to_string`** - Convert hexadecimal string to UTF-8
+- **`pad_number`** - Zero-pad single-digit numbers (e.g., `5` → `"05"`)
 
 ---
 
 ### Advanced Helpers (3 methods)
 
-- **`GetError`** - Retrieve last error message from SDK
-- **`handleError`** - Internal error tracking and logging
-- **`getTransactionOutcome`** - Poll for transaction confirmation with automatic retries
+- **`get_error`** - Retrieve last error message from SDK
+- **`handle_error`** - Internal error tracking and logging
+- **`get_transaction_outcome`** - Poll for transaction confirmation with automatic retries
 
 **Transaction Polling Behavior:**
-- Checks transaction status every **5 seconds** (configurable via `intervalSec`)
+- Checks transaction status every **5 seconds** (configurable via `interval_sec`)
 - Returns successfully when transaction has `BlockNumber > 0` (confirmed)
-- Throws timeout error after **120 seconds** (configurable via `timeoutSec`)
+- Throws timeout error after **120 seconds** (configurable via `timeout_sec`)
 - Handles "pending" status gracefully with automatic retries
 - Distinguishes between temporary "pending" and permanent errors
 
@@ -159,14 +159,14 @@ The Circular Protocol Python SDK provides **39 methods** across multiple categor
 
 ### Convenience Methods (1 method)
 
-- **`registerWallet`** - Simplified wallet registration (wraps `sendTransaction`)
+- **`register_wallet`** - Simplified wallet registration (wraps `send_transaction`)
 
 **Implementation:**
-- Automatically derives `From` and `To` addresses via `hashString(publicKey)`
+- Automatically derives `From` and `To` addresses via `hash_string(publicKey)`
 - Constructs transaction payload: `{"Action": "CP_WALLET", "PublicKey": "..."}`
 - Sets default values: `Nonce="00000000"`, `Type="C"`, `Signature="0000..."`
 - Calculates transaction ID as SHA-256 hash of transaction fields
-- Returns same response structure as `sendTransaction`
+- Returns same response structure as `send_transaction`
 
 ---
 
@@ -176,7 +176,7 @@ The Circular Protocol Python SDK provides **39 methods** across multiple categor
 - **5** Cryptographic Helpers
 - **4** Encoding Helpers
 - **3** Advanced Helpers
-- **3** Configuration Methods (getNagUrl, setNagUrl, getNagKey, setNagKey, setHeader, etc.)
+- **3** Configuration Methods (get_nag_url, set_nag_url, get_nag_key, set_nag_key, set_header, etc.)
 - **1** Convenience Method
 
 > **Note**: For detailed parameter types, response structures, and advanced usage examples, refer to the **[Python SDK Documentation](https://circular-protocol.gitbook.io/circular-sdk/api-docs/python)**.

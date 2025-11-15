@@ -157,7 +157,7 @@ def get_nag_key(client) -> Optional[str]:
 # Advanced Helpers
 # ============================================================================
 
-def GetError(code: int) -> str:
+def get_error(code: int) -> str:
     """
     Get error message for result code
 
@@ -200,7 +200,7 @@ def handle_error(result: dict) -> None:
         return  # Success, no error
 
     response = result.get('Response', 'Unknown error')
-    error_msg = GetError(result_code)
+    error_msg = get_error(result_code)
 
     # Raise specific exception types based on error code
     if result_code == 119:
