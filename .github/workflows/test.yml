@@ -1,0 +1,102 @@
+jobs:
+  e2e-tests:
+    if: github.event_name == 'push' || github.event_name == 'schedule'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install dependencies
+      run: pip install -e .[dev]
+    - continue-on-error: true
+      env:
+        CIRCULAR_API_KEY: ${{ secrets.CIRCULAR_API_KEY }}
+        CIRCULAR_NAG_URL: ${{ secrets.CIRCULAR_NAG_URL }}
+        CIRCULAR_TEST_ADDRESS: ${{ secrets.CIRCULAR_TEST_ADDRESS }}
+        CIRCULAR_TEST_BLOCKCHAIN: ${{ secrets.CIRCULAR_TEST_BLOCKCHAIN }}
+      name: Run E2E tests (read-only)
+      run: pytest tests/test_e2e.py -v -m e2e
+  publish-alpha:
+    if: github.ref == 'refs/heads/development' && github.event_name == 'push'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install build tools
+      run: pip install build twine
+    - name: Build package
+      run: python -m build
+    - continue-on-error: true
+      env:
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        TWINE_USERNAME: __token__
+      name: Publish to PyPI (alpha)
+      run: twine upload dist/* --skip-existing
+  publish-production:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install build tools
+      run: pip install build twine
+    - name: Build package
+      run: python -m build
+    - env:
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        TWINE_USERNAME: __token__
+      name: Publish to PyPI (latest)
+      run: twine upload dist/*
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Setup Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: pip install -e .[dev]
+    - continue-on-error: true
+      name: Run linter (ruff)
+      run: ruff check src/
+    - continue-on-error: true
+      name: Type check (mypy)
+      run: mypy src/ --strict
+    - name: Run unit tests
+      run: pytest tests/test_unit.py -v
+    - name: Build package
+      run: python -m build
+    strategy:
+      matrix:
+        python-version:
+        - '3.8'
+        - '3.9'
+        - '3.10'
+        - '3.11'
+        - '3.12'
+name: Test and Build
+on:
+  pull_request:
+    branches:
+    - main
+    - development
+  push:
+    branches:
+    - main
+    - development
