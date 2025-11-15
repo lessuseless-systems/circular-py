@@ -1,6 +1,6 @@
 # Circular Protocol - Python SDK
 
-[![PyPI version](https://img.shields.io/pypi/v/circular-protocol.svg)](https://pypi.org/project/circular-protocol/)
+[![PyPI version](https://img.shields.io/pypi/v/circular-protocol-api.svg)](https://pypi.org/project/circular-protocol-api/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 The **Circular Protocol Python SDK** is the official Python library for seamless integration with the Circular blockchain ecosystem. This open-source SDK provides a comprehensive suite of tools for efficient and secure interaction with blockchain networks, managing wallets, assets, smart contracts, and more.
@@ -15,54 +15,46 @@ The **Circular Protocol Python SDK** is the official Python library for seamless
 - **Transaction Management**: Send transactions, track status, and search the blockchain
 - **Analytics**: Access blockchain performance data and insights
 - **Cryptographic Helpers**: Built-in utilities for key generation, signing, and hashing
-- **Async/Await Support**: Full async/await support with aiohttp
 - **Type Hints**: Comprehensive type annotations for better IDE support
+- **Exception Handling**: 13 custom exception types for granular error handling
 
 ```bash
-pip install circular-protocol
+pip install circular-protocol-api
 ```
 
 Or with poetry:
 
 ```bash
-poetry add circular-protocol
+poetry add circular-protocol-api
 ```
 
 Or with pipenv:
 
 ```bash
-pipenv install circular-protocol
+pipenv install circular-protocol-api
 ```
 
 ## 🚀 Quick Start
 
 ```python
-from circular_protocol import CircularProtocolAPI, CircularAPIException
+from circular_protocol_api import CircularProtocolAPI, CircularProtocolError
 
-async def main():
-    # Initialize the API client
-    api = CircularProtocolAPI(
-        nag_url='https://nag.circularlabs.io/NAG.php?cep=',
-        nag_key='your-api-key'  # Optional
+# Initialize the API client
+api = CircularProtocolAPI(
+    nag_url='https://nag.circularlabs.io/NAG.php?cep=',
+    nag_key='your-api-key'  # Optional
+)
+
+try:
+    # Check if a wallet exists
+    result = api.check_wallet(
+        address='0xd55872dbe508fd27445889b9d81bbc9411bb0f1353153a249f2fb34ef2690310',
+        blockchain='MainNet'
     )
 
-    try:
-        # Check if a wallet exists
-        result = await api.check_wallet({
-            'Address': '0xd55872dbe508fd27445889b9d81bbc9411bb0f1353153a249f2fb34ef2690310',
-            'Blockchain': 'MainNet',
-            'Version': '1.0.8'
-        })
-
-        print(f"Wallet exists: {result['Response']}")
-    except CircularAPIException as e:
-        print(f"API Error: {e.message}")
-    finally:
-        await api.close()
-
-# Run with asyncio
-import asyncio
-asyncio.run(main())
+    print(f"Wallet exists: {result['Response']}")
+except CircularProtocolError as e:
+    print(f"API Error: {e.message}")
 ```
 
 ## 📜 API Reference
@@ -194,7 +186,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **[Python SDK Documentation](https://circular-protocol.gitbook.io/circular-sdk/api-docs/python)** - Complete API reference
 - **[Circular Protocol Docs](https://circular-protocol.gitbook.io)** - Protocol documentation
 - **[Circular Canonical](https://github.com/circular-protocol/circular-canonical)** - Single source of truth
-- **[Package on PyPI](https://pypi.org/project/circular-protocol/)** - Official Python package
+- **[Package on PyPI](https://pypi.org/project/circular-protocol-api/)** - Official Python package
 
 ## ℹ️ About
 
