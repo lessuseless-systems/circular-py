@@ -199,3 +199,28 @@ temp/
 # Logs
 logs/
 *.log
+
+# Claude Code
+.claude/
+
+# Ruff
+.ruff_cache/
+
+# pytest
+.pytest_cache/
+
+# Python virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Security - Never commit these!
+*.pem
+*.key
+*.p12
+*.pfx
+.env.local
+.env.*.local
+secrets/
+credentials/
