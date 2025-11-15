@@ -365,14 +365,6 @@ src/circular_protocol_api/
 └── _helpers.py         # Utility functions
 ```
 
-### Code Generation
-
-This SDK is partially auto-generated from the [circular-canonical](https://github.com/circular-protocol/circular-canonical) repository. When making changes:
-
-- Manual changes go in hand-written modules
-- Auto-generated code should be updated in canonical repo
-- Ensure changes don't conflict with generation process
-
 ## Getting Help
 
 - **Issues**: [GitHub Issues](https://github.com/circular-protocol/circular-py/issues)
