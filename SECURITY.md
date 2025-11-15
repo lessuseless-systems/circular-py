@@ -15,30 +15,48 @@ We release patches for security vulnerabilities in the following versions:
 
 The Circular Protocol Python SDK team takes security vulnerabilities seriously. We appreciate your efforts to responsibly disclose your findings.
 
-### How to Report
+### Where to Report
 
 **Please do NOT report security vulnerabilities through public GitHub issues.**
 
-Instead, please report security vulnerabilities by emailing:
+Instead, please report them via email to:
 
-**dannydnc@protonmail.com**
+- **Email**: security@circularlabs.io
+- **Subject**: `[SECURITY] Circular Protocol Python SDK`
 
-Include the following information:
+If you prefer encrypted communication, please request our PGP key.
 
-- **Description**: Detailed description of the vulnerability
-- **Impact**: What an attacker could do with this vulnerability
-- **Steps to Reproduce**: Clear steps to reproduce the issue
+### What to Include
+
+Please include the following information in your report:
+
+- **Type of vulnerability** (e.g., cryptographic weakness, input validation issue, etc.)
+- **Full paths of source file(s)** related to the manifestation of the vulnerability
+- **Location of the affected source code** (tag/branch/commit or direct URL)
+- **Step-by-step instructions** to reproduce the issue
+- **Proof-of-concept or exploit code** (if possible)
+- **Impact of the vulnerability**, including how an attacker might exploit it
+- **Your contact information** for follow-up questions
 - **Affected Versions**: Which versions of the SDK are affected
-- **Proof of Concept**: Code or screenshots demonstrating the vulnerability
 - **Suggested Fix**: (Optional) Your suggestions for fixing the issue
 
-### What to Expect
+### Response Timeline
 
-- **Acknowledgment**: We will acknowledge receipt of your vulnerability report within 48 hours
-- **Investigation**: We will investigate and validate the reported vulnerability
-- **Communication**: We will keep you informed about our progress
-- **Resolution Timeline**: We aim to release a fix within 90 days of the initial report
-- **Credit**: We will credit you in the security advisory (unless you prefer to remain anonymous)
+- **Initial Response**: Within 48 hours of report submission
+- **Vulnerability Assessment**: Within 5 business days
+- **Fix Timeline**: Depends on severity and complexity
+  - Critical: Within 7 days
+  - High: Within 14 days
+  - Medium: Within 30 days
+  - Low: Next scheduled release
+
+### Security Update Process
+
+1. **Confirmation**: We confirm the vulnerability and determine its severity
+2. **Fix Development**: We develop a fix in a private repository
+3. **Testing**: Thorough testing of the fix
+4. **Release**: Security patch released with credit to reporter (unless anonymity requested)
+5. **Disclosure**: Public disclosure after patch is available
 
 ### Security Updates
 
@@ -231,6 +249,43 @@ We follow responsible disclosure:
 - **Coordinated Release**: We coordinate public disclosure with reporters
 - **Credit**: We credit security researchers (unless anonymous preferred)
 
+## Security Advisories
+
+Security advisories are published on GitHub Security Advisories page:
+
+**https://github.com/circular-protocol/circular-py/security/advisories**
+
+All security patches are documented in:
+- GitHub Security Advisories
+- CHANGELOG.md with `[SECURITY]` tag
+- PyPI release notes
+- Security mailing list (if subscribed)
+
+## Bug Bounty Program
+
+We value the security research community's efforts. While we don't currently offer monetary rewards, we provide:
+
+- **Public recognition** in our Security Hall of Fame (unless you prefer anonymity)
+- **Credit** in CVE disclosures and security advisories
+- **Direct communication** with our security team
+- **Early notification** of patch releases
+
+Eligible vulnerabilities:
+- Remote code execution
+- Authentication bypass
+- Cryptographic weaknesses
+- Private key exposure
+- SQL injection (if applicable)
+- Cross-site scripting (XSS) in documentation
+- Denial of service attacks
+
+Out of scope:
+- Issues in third-party dependencies (report to original maintainers)
+- Social engineering attacks
+- Physical attacks
+- Issues requiring physical access
+- Theoretical vulnerabilities without proof of concept
+
 ## Security Hall of Fame
 
 We thank the following researchers for responsibly disclosing vulnerabilities:
@@ -241,7 +296,8 @@ We thank the following researchers for responsibly disclosing vulnerabilities:
 
 For security concerns, contact:
 
-- **Email**: dannydnc@protonmail.com
+- **Primary**: security@circularlabs.io
+- **Alternative**: dannydnc@protonmail.com
 - **Subject**: `[SECURITY] Circular Protocol Python SDK`
 
 For general questions:

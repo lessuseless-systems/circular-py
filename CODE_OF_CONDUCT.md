@@ -24,6 +24,9 @@ community include:
   and learning from the experience
 * Focusing on what is best not just for us as individuals, but for the overall
   community
+* Using welcoming and inclusive language
+* Being respectful of differing viewpoints and experiences
+* Showing patience with new contributors and those learning
 
 Examples of unacceptable behavior include:
 
