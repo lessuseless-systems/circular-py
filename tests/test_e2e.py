@@ -72,6 +72,70 @@ def api():
     return CircularProtocolAPI(nag_url, api_key)
 
 
+# Helper functions to eliminate code duplication
+def _process_request_template(template_str: str) -> dict:
+    """
+    Process a JSON request template by replacing environment variables.
+
+    Args:
+        template_str: JSON template string with ${VAR} placeholders
+
+    Returns:
+        dict: Processed request with env vars replaced and Version removed
+    """
+    import json
+
+    # Replace environment variable placeholders
+    processed = template_str.replace(
+        '${CIRCULAR_TEST_ADDRESS}',
+        os.getenv('CIRCULAR_TEST_ADDRESS', '')
+    ).replace(
+        '${CIRCULAR_TEST_BLOCKCHAIN}',
+        os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2')
+    )
+
+    request = json.loads(processed)
+
+    # Convert PascalCase keys to snake_case and remove Version
+    kwargs = {}
+    for k, v in request.items():
+        if k == 'Version':
+            continue
+        # Simple snake_case conversion: Address -> address, BlockNumber -> block_number
+        if not any(c.isupper() for c in k[1:]):
+            # Simple case: only first char is uppercase
+            snake_key = k[0].lower() + k[1:]
+        else:
+            # Complex case: multiple uppercase chars
+            snake_key = ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_')
+        kwargs[snake_key] = v
+
+    return kwargs
+
+
+def _run_api_test(api, method_name: str, request_template: str, description: str, custom_assertion=None):
+    """
+    Run a single API test with standard pattern.
+
+    Args:
+        api: CircularProtocolAPI instance
+        method_name: Name of the API method to call (e.g., 'check_wallet')
+        request_template: JSON template string with request parameters
+        description: Human-readable test description
+        custom_assertion: Optional custom assertion function (receives result dict)
+    """
+    kwargs = _process_request_template(request_template)
+    method = getattr(api, method_name)
+    result = method(**kwargs)
+
+    if custom_assertion:
+        custom_assertion(result)
+    else:
+        assert result['Result'] is not None
+
+    print(f'  ✅ E2E: {description}')
+
+
 # Read-only E2E tests (require CIRCULAR_TEST_ADDRESS)
 if has_read_env:
     @pytest.mark.e2e
@@ -79,105 +143,44 @@ if has_read_env:
         # E2E tests for Wallet API methods (Read-Only)
         def test_check_wallet(self, api):
             """E2E: Check if test wallet exists on blockchain"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'check_wallet', '''{
           "Address": "${CIRCULAR_TEST_ADDRESS}",
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.check_wallet(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Check if test wallet exists on blockchain')
+        }''', 'Check if test wallet exists on blockchain')
+
         def test_get_latest_transactions(self, api):
             """E2E: Get latest transactions for wallet"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'get_latest_transactions', '''{
           "Address": "${CIRCULAR_TEST_ADDRESS}",
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.get_latest_transactions(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Get latest transactions for wallet')
+        }''', 'Get latest transactions for wallet')
+
         def test_get_wallet(self, api):
             """E2E: Retrieve wallet details from blockchain"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'get_wallet', '''{
           "Address": "${CIRCULAR_TEST_ADDRESS}",
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.get_wallet(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Retrieve wallet details from blockchain')
+        }''', 'Retrieve wallet details from blockchain')
+
         def test_get_wallet_balance(self, api):
             """E2E: Get wallet balance from blockchain"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'get_wallet_balance', '''{
           "Address": "${CIRCULAR_TEST_ADDRESS}",
           "Asset": "CIRX",
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.get_wallet_balance(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Get wallet balance from blockchain')
+        }''', 'Get wallet balance from blockchain')
+
         def test_get_wallet_nonce(self, api):
             """E2E: Get wallet nonce from blockchain"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'get_wallet_nonce', '''{
           "Address": "${CIRCULAR_TEST_ADDRESS}",
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.get_wallet_nonce(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Get wallet nonce from blockchain')
+        }''', 'Get wallet nonce from blockchain')
 
 
     @pytest.mark.e2e
@@ -185,104 +188,43 @@ if has_read_env:
         # E2E tests for Transaction API methods (Read-Only)
         def test_get_pending_transaction(self, api):
             """E2E: Get pending transactions"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'get_pending_transaction', '''{
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.get_pending_transaction(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Get pending transactions')
+        }''', 'Get pending transactions')
+
         def test_get_transaction_by_address(self, api):
             """E2E: Get transactions by wallet address"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'get_transactionby_address', '''{
           "Address": "${CIRCULAR_TEST_ADDRESS}",
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.get_transactionby_address(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Get transactions by wallet address')
+        }''', 'Get transactions by wallet address')
+
         def test_get_transaction_by_date(self, api):
             """E2E: Get transactions by date range"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'get_transactionby_date', '''{
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "EndDate": "2024-12-31",
           "StartDate": "2024-01-01",
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.get_transactionby_date(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Get transactions by date range')
+        }''', 'Get transactions by date range')
+
         def test_get_transaction_by_id(self, api):
             """E2E: Get transaction by transaction ID"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'get_transactionby_i_d', '''{
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "TransactionID": "0x0000000000000000000000000000000000000000000000000000000000000000",
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.get_transactionby_i_d(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Get transaction by transaction ID')
+        }''', 'Get transaction by transaction ID')
+
         def test_get_transaction_by_node(self, api):
             """E2E: Get transactions by node ID"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'get_transactionby_node', '''{
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "NodeID": "node-0001",
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.get_transactionby_node(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Get transactions by node ID')
+        }''', 'Get transactions by node ID')
 
 
     @pytest.mark.e2e
@@ -290,83 +232,34 @@ if has_read_env:
         # E2E tests for Asset API methods (Read-Only)
         def test_get_asset(self, api):
             """E2E: Get specific asset information"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'get_asset', '''{
           "AssetName": "CIRX",
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.get_asset(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Get specific asset information')
+        }''', 'Get specific asset information')
+
         def test_get_asset_list(self, api):
             """E2E: Get list of all assets on blockchain"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'get_asset_list', '''{
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.get_asset_list(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Get list of all assets on blockchain')
+        }''', 'Get list of all assets on blockchain')
+
         def test_get_asset_supply(self, api):
             """E2E: Get asset supply information"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'get_asset_supply', '''{
           "AssetName": "CIRX",
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.get_asset_supply(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Get asset supply information')
+        }''', 'Get asset supply information')
+
         def test_get_voucher(self, api):
             """E2E: Get voucher details"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'get_voucher', '''{
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "Version": "1.0.8",
           "VoucherID": "test-voucher-id"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.get_voucher(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Get voucher details')
+        }''', 'Get voucher details')
 
 
     @pytest.mark.e2e
@@ -374,23 +267,13 @@ if has_read_env:
         # E2E tests for Network API methods (Read-Only)
         def test_get_blockchains(self, api):
             """E2E: Retrieve list of available blockchains"""
-            import json
-            request_str = '''{
+            def _assert_blockchains(result):
+                assert result['Result'] == 200
+                assert isinstance(result['Response']['Blockchains'], list)
+
+            _run_api_test(api, 'get_blockchains', '''{
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.get_blockchains(**kwargs)
-        
-            assert result['Result'] == 200
-            assert isinstance(result['Response']['Blockchains'], list)
-        
-            print(f'  ✅ E2E: Retrieve list of available blockchains')
+        }''', 'Retrieve list of available blockchains', custom_assertion=_assert_blockchains)
 
 
     @pytest.mark.e2e
@@ -398,83 +281,34 @@ if has_read_env:
         # E2E tests for Block API methods (Read-Only)
         def test_get_analytics(self, api):
             """E2E: Get blockchain analytics and statistics"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'get_analytics', '''{
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.get_analytics(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Get blockchain analytics and statistics')
+        }''', 'Get blockchain analytics and statistics')
+
         def test_get_block(self, api):
             """E2E: Retrieve specific block by number"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'get_block', '''{
           "BlockNumber": 1,
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.get_block(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Retrieve specific block by number')
+        }''', 'Retrieve specific block by number')
+
         def test_get_block_count(self, api):
             """E2E: Get current block count from blockchain"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'get_block_count', '''{
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.get_block_count(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Get current block count from blockchain')
+        }''', 'Get current block count from blockchain')
+
         def test_get_block_range(self, api):
             """E2E: Retrieve range of blocks"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'get_block_range', '''{
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "EndBlock": 10,
           "StartBlock": 1,
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.get_block_range(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Retrieve range of blocks')
+        }''', 'Retrieve range of blocks')
 
 
     @pytest.mark.e2e
@@ -482,24 +316,11 @@ if has_read_env:
         # E2E tests for Domain API methods (Read-Only)
         def test_get_domain(self, api):
             """E2E: Resolve domain name to wallet address"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'get_domain', '''{
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "Domain": "test.circular",
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.get_domain(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Resolve domain name to wallet address')
+        }''', 'Resolve domain name to wallet address')
 
 
     @pytest.mark.e2e
@@ -507,26 +328,13 @@ if has_read_env:
         # E2E tests for Contract API methods (Read-Only)
         def test_test_contract(self, api):
             """E2E: Test smart contract execution (simulation)"""
-            import json
-            request_str = '''{
+            _run_api_test(api, 'test_contract', '''{
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "ContractAddress": "0x0000000000000000000000000000000000000000000000000000000000000000",
           "Method": "testMethod",
           "Parameters": "{}",
           "Version": "1.0.8"
-        }'''
-            request_str = request_str.replace('${CIRCULAR_TEST_ADDRESS}', os.getenv('CIRCULAR_TEST_ADDRESS', ''))
-            request_str = request_str.replace('${CIRCULAR_TEST_BLOCKCHAIN}', os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2'))
-            request = json.loads(request_str)
-        
-            # Convert request keys to snake_case kwargs (Address -> address, BlockNumber -> block_number)
-            kwargs = {k[0].lower() + k[1:] if not any(c.isupper() for c in k[1:]) else ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_'): v for k, v in request.items() if k not in ['Version']}
-        
-            result = api.test_contract(**kwargs)
-        
-            assert result['Result'] is not None
-        
-            print(f'  ✅ E2E: Test smart contract execution (simulation)')
+        }''', 'Test smart contract execution (simulation)')
 
 
 # Write operation E2E tests (require CIRCULAR_PRIVATE_KEY)
@@ -660,6 +468,6 @@ if has_write_env:
             result = api.call_contract(**{k.lower(): v for k, v in request.items()})
             
             assert result['Result'] is not None
-            
-            print(f'  ✅ Contract call executed (may have failed if contract doesn\\'t exist)')
+
+            print(f"  ✅ Contract call executed (may have failed if contract doesn't exist)")
             print(f'  📊 Result: {result.get("Result")}')
