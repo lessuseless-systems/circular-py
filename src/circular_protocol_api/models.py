@@ -1,4 +1,22 @@
 """
+********************************************************************************
+
+ CIRCULAR LAYER 1 BLOCKCHAIN PROTOCOL INTERFACE LIBRARY
+ License : Open Source for private and commercial use
+
+ CIRCULAR GLOBAL LEDGERS, INC. - USA
+
+
+ Version : 1.0.8
+
+ Creation: 7/12/2022
+ Update  : 28/01/2025
+
+ Originator: Gianluca De Novi, PhD
+ Contributors: Danny De Novi, Ashley Barr
+
+********************************************************************************
+
 Response type definitions for Circular Protocol API.
 
 This module contains TypedDict classes for all API response types,

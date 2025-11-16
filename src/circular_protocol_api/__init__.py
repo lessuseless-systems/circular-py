@@ -1,11 +1,27 @@
 """
+********************************************************************************
+
+ CIRCULAR LAYER 1 BLOCKCHAIN PROTOCOL INTERFACE LIBRARY
+ License : Open Source for private and commercial use
+
+ CIRCULAR GLOBAL LEDGERS, INC. - USA
+
+
+ Version : 1.0.8
+
+ Creation: 7/12/2022
+ Update  : 28/01/2025
+
+ Originator: Gianluca De Novi, PhD
+ Contributors: Danny De Novi, Ashley Barr
+
+********************************************************************************
+
 Circular Protocol Python SDK.
 
 Official Python SDK for Circular Protocol blockchain API.
 Provides typed access to all blockchain operations including wallet management,
 transactions, assets, blocks, contracts, domains, and network queries.
-
-Version: 1.0.8
 
 Example:
     >>> from circular_protocol_api import CircularProtocolAPI
