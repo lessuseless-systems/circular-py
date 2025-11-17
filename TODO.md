@@ -2,16 +2,28 @@
 
 ## Missing Utility Methods
 
-Add the following utility methods to match Dart SDK:
+~~Add the following utility methods to match Dart SDK:~~
 
 ### Configuration Methods
-- [ ] `set_header(key: str, value: str) -> None` - Set custom HTTP headers (currently missing)
+- [x] `set_header(key: str, value: str) -> None` - Set custom HTTP headers ✅ **COMPLETED**
 
 ### Lifecycle Methods
-- [ ] `dispose() -> None` - Clean up resources (HTTP session, etc.)
+- [x] `dispose() -> None` - Clean up resources (HTTP session, etc.) ✅ **COMPLETED**
 
 ## Notes
-- Python currently has 42 public methods
+- Python now has 44 public methods (was 42)
 - Dart has 46 public methods
-- Adding these 2 methods will bring Python to 44 methods
+- All critical utility methods have been implemented
 - Python already has most utility methods that TypeScript is missing
+
+## Implementation Details
+
+Both methods have been added to `src/circular_protocol_api/client.py`:
+
+1. **set_header()** - Lines 285-302
+   - Allows setting custom HTTP headers for all API requests
+   - Headers are stored in `self.headers` dict and merged in `_make_request()`
+
+2. **dispose()** - Lines 304-321
+   - Properly closes the HTTP session to free resources
+   - Should be called when done using the API client

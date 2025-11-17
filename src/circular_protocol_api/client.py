@@ -282,6 +282,44 @@ class CircularProtocolAPI:
         """
         self.base_url = address
 
+    def set_header(self, key: str, value: str) -> None:
+        """
+        Set a custom HTTP header for API requests.
+
+        Custom headers are included in all subsequent API requests.
+        This is useful for setting authorization headers, custom tracking
+        headers, or any other HTTP headers required by your use case.
+
+        Args:
+            key: Header name (e.g., 'X-Custom-Header')
+            value: Header value
+
+        Example:
+            >>> api = CircularProtocolAPI()
+            >>> api.set_header('X-Request-ID', 'abc123')
+            >>> api.set_header('X-Client-Version', '1.0.0')
+        """
+        self.headers[key] = value
+
+    def dispose(self) -> None:
+        """
+        Clean up resources used by the API client.
+
+        Closes the HTTP session and releases any resources held by the client.
+        Call this method when you're done using the API client to ensure
+        proper cleanup, especially in long-running applications.
+
+        After calling dispose(), the client should not be used for further
+        API requests. Create a new instance if needed.
+
+        Example:
+            >>> api = CircularProtocolAPI()
+            >>> # ... use the API ...
+            >>> api.dispose()
+        """
+        if hasattr(self, 'session') and self.session:
+            self.session.close()
+
     # ============================================================================
     # Convenience Methods
     # ============================================================================
