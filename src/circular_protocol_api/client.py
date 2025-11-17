@@ -358,6 +358,9 @@ class CircularProtocolAPI:
         """
         import json
 
+        # Normalize blockchain (remove 0x prefix if present)
+        blockchain = self.hex_fix(blockchain)
+
         # Derive addresses from public key (sha256)
         from_address = self.hash_string(public_key)
         to_address = from_address
@@ -378,6 +381,88 @@ class CircularProtocolAPI:
         # Calculate transaction ID
         id_input = blockchain + from_address + to_address + payload + nonce + timestamp
         transaction_id = self.hash_string(id_input)
+
+        # Send transaction
+        return self.send_transaction(
+            blockchain=blockchain,
+            from_address=from_address,
+            to_address=to_address,
+            transaction_id=transaction_id,
+            nonce=nonce,
+            payload=payload,
+            signature=signature,
+            timestamp=timestamp,
+            tx_type=transaction_type
+        )
+
+    def certify_data(self, blockchain: str, private_key: str, data: str) -> Dict:
+        """
+        Certify data on blockchain.
+
+        This convenience method wraps sendTransaction to create a certificate
+        transaction (C_TYPE_CERTIFICATE). It handles all transaction construction:
+        - Derives addresses from private key
+        - Builds certificate payload with the data
+        - Calculates transaction ID
+        - Signs the transaction
+
+        Use this to create immutable, timestamped proofs of data on the blockchain.
+
+        Args:
+            blockchain: Blockchain where the data will be certified (e.g., 'MainNet')
+            private_key: Wallet private key (64 hex characters) for signing
+            data: Data to certify (will be hex-encoded)
+
+        Returns:
+            Dict: Transaction result with TransactionID and Status
+
+        Raises:
+            CircularProtocolError: If the certification fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> result = api.certify_data('MainNet', private_key, 'Document Hash: abc123')
+            >>> print(f'Transaction ID: {result["Response"]["TransactionID"]}')
+        """
+        import json
+
+        # Normalize blockchain (remove 0x prefix if present)
+        blockchain = self.hex_fix(blockchain)
+
+        # Derive addresses from private key
+        public_key = self.get_public_key(private_key)
+        from_address = self.hash_string(public_key)
+        to_address = from_address
+
+        # Build payload
+        payload_obj = {
+            "Action": "CP_CERTIFICATE",
+            "Data": data
+        }
+        payload = self.string_to_hex(json.dumps(payload_obj))
+
+        # Transaction metadata
+        transaction_type = "C_TYPE_CERTIFICATE"
+
+        # Get wallet nonce and increment it
+        nonce_response = self.get_wallet_nonce(blockchain, from_address)
+        if nonce_response['Result'] != 200:
+            # Wallet might not be registered, use nonce 0
+            nonce = "0"
+        else:
+            current_nonce = int(nonce_response['Response']['Nonce'])
+            nonce = str(current_nonce + 1)
+
+        timestamp = self.get_formatted_timestamp()
+
+        # Calculate transaction ID
+        id_input = blockchain + from_address + to_address + payload + nonce + timestamp
+        transaction_id = self.hash_string(id_input)
+
+        # Sign the transaction ID (not the data itself)
+        # Per Circular Protocol spec: sign the hashed transaction ID
+        signature = self.sign_message(transaction_id, private_key)
 
         # Send transaction
         return self.send_transaction(

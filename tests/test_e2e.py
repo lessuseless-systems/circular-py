@@ -348,94 +348,45 @@ if has_write_env:
         """
         def test_register_wallet(self, api):
             """E2E Write: Register a new wallet on the blockchain"""
-            import time
-            from datetime import datetime
-            from circular_protocol_api._crypto import get_public_key, sign_message, hash_string
-        
-            # Derive address and public key from private key
+            from circular_protocol_api._crypto import get_public_key
+
+            # Get environment variables
             private_key = os.getenv('CIRCULAR_PRIVATE_KEY')
-            public_key = get_public_key(private_key)
-            address = hash_string(public_key)
-        
-            # Format timestamp
-            timestamp = datetime.utcnow().strftime('%%Y:%%m:%%d-%%H:%%M:%%S')
-        
             blockchain = os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2')
-        
-            # Build registerWallet request
-            account_name = f'E2E-Test-Wallet-{int(time.time())}'
-            signature_payload = blockchain + account_name + public_key
-            signature = sign_message(signature_payload, private_key)
-            
-            request = {
-                'Blockchain': blockchain,
-                'AccountName': account_name,
-                'PublicKey': public_key,
-                'Signature': signature,
-                'Version': '1.0.8'
-            }
-            
-            print(f'  📝 Registering wallet: {account_name}')
-            result = api.register_wallet(**{k.lower(): v for k, v in request.items()})
-            
+
+            # Derive public key
+            public_key = get_public_key(private_key)
+
+            print(f'  📝 Registering wallet on blockchain...')
+            result = api.register_wallet(blockchain, public_key)
+
             assert result['Result'] == 200
-            assert result['Response']['WalletAddress'] is not None
-            assert isinstance(result['Response']['WalletAddress'], str) and all(c in '0123456789abcdefABCDEF' for c in result['Response']['WalletAddress'].replace('0x', ''))
-            assert result['Response']['TransactionID'] is not None
-            
+            assert result['Response']['TxID'] is not None
+            assert isinstance(result['Response']['TxID'], str) and all(c in '0123456789abcdefABCDEF' for c in result['Response']['TxID'].replace('0x', ''))
+
             print(f'  ✅ Wallet registered successfully')
-            print(f'  📍 Wallet Address: {result.get("Response", {}).get("WalletAddress")}')
-            print(f'  🔗 Transaction ID: {result.get("Response", {}).get("TransactionID")}')
+            print(f'  🔗 Transaction ID: {result.get("Response", {}).get("TxID")}')
 
         def test_certify_data(self, api):
             """E2E Write: Certify data on the blockchain (C_TYPE_CERTIFICATE)"""
             import time
-            from datetime import datetime
-            from circular_protocol_api._crypto import get_public_key, sign_message, hash_string
-        
-            # Derive address and public key from private key
+
+            # Get environment variables
             private_key = os.getenv('CIRCULAR_PRIVATE_KEY')
-            public_key = get_public_key(private_key)
-            address = hash_string(public_key)
-        
-            # Format timestamp
-            timestamp = datetime.utcnow().strftime('%%Y:%%m:%%d-%%H:%%M:%%S')
-        
             blockchain = os.getenv('CIRCULAR_TEST_BLOCKCHAIN', '0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2')
-        
-            # Build certificate transaction request
-            from_wallet = address
-            to_wallet = address
-            amount = '0'
-            transaction_type = 'C_TYPE_CERTIFICATE'
-            voucher = ''
+
+            # Data to certify
             data = f'E2E Test Data Certification {int(time.time())}'
-            
-            signature_payload = blockchain + from_wallet + to_wallet + amount + transaction_type + timestamp + voucher + data
-            signature = sign_message(signature_payload, private_key)
-            
-            request = {
-                'Blockchain': blockchain,
-                'FromWallet': from_wallet,
-                'ToWallet': to_wallet,
-                'Amount': amount,
-                'TransactionType': transaction_type,
-                'Timestamp': timestamp,
-                'Voucher': voucher,
-                'Data': data,
-                'Signature': signature,
-                'Version': '1.0.8'
-            }
-            
+
             print(f'  📝 Certifying data on blockchain...')
-            result = api.send_transaction(**{k.lower(): v for k, v in request.items()})
-            
+            result = api.certify_data(blockchain, private_key, data)
+
             assert result['Result'] == 200
-            assert result['Response']['TransactionID'] is not None
-            assert isinstance(result['Response']['TransactionID'], str) and all(c in '0123456789abcdefABCDEF' for c in result['Response']['TransactionID'].replace('0x', ''))
-            
+            assert result['Response']['TxID'] is not None
+            assert isinstance(result['Response']['TxID'], str) and all(c in '0123456789abcdefABCDEF' for c in result['Response']['TxID'].replace('0x', ''))
+
             print(f'  ✅ Data certified successfully')
-            print(f'  🔗 Transaction ID: {result.get("Response", {}).get("TransactionID")}')
+            print(f'  🔗 Transaction ID: {result.get("Response", {}).get("TxID")}')
             print(f'  📄 Certified data: {data}')
 
         def test_call_contract(self, api):

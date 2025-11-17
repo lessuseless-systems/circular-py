@@ -101,7 +101,7 @@ def get_public_key(private_key: str) -> str:
         private_key: Private key in hex format (with or without '0x' prefix)
 
     Returns:
-        Public key in uncompressed hex format (64 bytes, without 0x04 prefix)
+        Public key in uncompressed hex format (130 characters with 04 prefix)
     """
     # Remove 0x prefix if present
     clean_key = hex_fix(private_key)
@@ -114,7 +114,8 @@ def get_public_key(private_key: str) -> str:
     vk = sk.get_verifying_key()
     public_key_bytes = vk.to_string()  # Returns 64 bytes without 0x04 prefix
 
-    return public_key_bytes.hex()
+    # Add 04 prefix to match circular-js behavior (uncompressed point indicator)
+    return '04' + public_key_bytes.hex()
 
 
 def hash_string(string: str) -> str:
