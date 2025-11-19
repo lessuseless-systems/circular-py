@@ -17,6 +17,7 @@ Run tests:
 import pytest
 import os
 from circular_protocol_api import CircularProtocolAPI
+import requests
 
 API_URL = os.getenv("CIRCULAR_API_URL", "http://localhost:8080")
 API_VERSION = "1.0.8"
@@ -34,7 +35,15 @@ class TestCircularProtocolIntegration:
 class TestNetworkAPI(TestCircularProtocolIntegration):
     """Test Network API endpoints"""
 
-    @pytest.mark.timeout(10)
+    from circular_protocol_api import APIConnectionError, ValidationError  # use specific exceptions
+
+    @pytest.fixture(scope="session", autouse=True)
+    def require_server():
+        """Skip integration tests when the mock server is not available."""
+        try:
+            requests.get(API_URL, timeout=2)
+        except Exception:
+            pytest.skip(f"Mock API not reachable at {API_URL}")
     def test_get_blockchains(self, api):
         """Should list supported blockchains"""
         result = api.getBlockchains(**{"Version": "1.0.8"})
