@@ -143,7 +143,7 @@ def _process_request_template(template_str: str) -> dict:
         else:
             # Auto-convert PascalCase to snake_case: BlockCount -> block_count
             snake_key = re.sub(r'(?<!^)(?=[A-Z])', '_', k).lower()
-        
+
         kwargs[snake_key] = v
 
     return kwargs
