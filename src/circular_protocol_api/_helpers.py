@@ -31,6 +31,7 @@ from datetime import datetime
 # Encoding Helpers
 # ============================================================================
 
+
 def hex_fix(hex_string: str) -> str:
     """
     Normalize hex strings (remove 0x prefix if present)
@@ -41,7 +42,7 @@ def hex_fix(hex_string: str) -> str:
     Returns:
         Normalized hex string without 0x prefix
     """
-    if hex_string.startswith('0x') or hex_string.startswith('0X'):
+    if hex_string.startswith("0x") or hex_string.startswith("0X"):
         return hex_string[2:]
     return hex_string
 
@@ -56,7 +57,7 @@ def string_to_hex(string: str) -> str:
     Returns:
         Hex-encoded string
     """
-    return string.encode('utf-8').hex()
+    return string.encode("utf-8").hex()
 
 
 def hex_to_string(hex_string: str) -> str:
@@ -70,7 +71,7 @@ def hex_to_string(hex_string: str) -> str:
         Decoded string
     """
     normalized = hex_fix(hex_string)
-    return bytes.fromhex(normalized).decode('utf-8')
+    return bytes.fromhex(normalized).decode("utf-8")
 
 
 def _pad_number(num: int) -> str:
@@ -83,7 +84,7 @@ def _pad_number(num: int) -> str:
     Returns:
         Padded string
     """
-    return f'{num:02d}'
+    return f"{num:02d}"
 
 
 def pad_number(num: int, length: int = 2) -> str:
@@ -116,12 +117,13 @@ def get_formatted_timestamp() -> str:
     minutes = _pad_number(now.minute)
     seconds = _pad_number(now.second)
 
-    return f'{year}:{month}:{day}-{hours}:{minutes}:{seconds}'
+    return f"{year}:{month}:{day}-{hours}:{minutes}:{seconds}"
 
 
 # ============================================================================
 # Configuration Helpers (designed to work with client instance)
 # ============================================================================
+
 
 def set_nag_url(client, url: str) -> None:
     """
@@ -168,12 +170,13 @@ def get_nag_key(client) -> Optional[str]:
     Returns:
         Current NAG key or None
     """
-    return getattr(client, '_nag_key', None)
+    return getattr(client, "_nag_key", None)
 
 
 # ============================================================================
 # Advanced Helpers
 # ============================================================================
+
 
 def get_error(code: int) -> str:
     """
@@ -186,14 +189,14 @@ def get_error(code: int) -> str:
         Error message string
     """
     error_codes = {
-        100: 'Success',
-        117: 'Invalid Payload',
-        119: 'Invalid Signature',
-        121: 'Invalid Nonce',
-        404: 'Not Found',
-        500: 'Internal Server Error',
+        100: "Success",
+        117: "Invalid Payload",
+        119: "Invalid Signature",
+        121: "Invalid Nonce",
+        404: "Not Found",
+        500: "Internal Server Error",
     }
-    return error_codes.get(code, f'Unknown error code: {code}')
+    return error_codes.get(code, f"Unknown error code: {code}")
 
 
 def handle_error(result: dict) -> None:
@@ -213,11 +216,11 @@ def handle_error(result: dict) -> None:
         InvalidPayloadError,
     )
 
-    result_code = result.get('Result', 0)
+    result_code = result.get("Result", 0)
     if result_code == 200:
         return  # Success, no error
 
-    response = result.get('Response', 'Unknown error')
+    response = result.get("Response", "Unknown error")
     error_msg = get_error(result_code)
 
     # Raise specific exception types based on error code
@@ -228,7 +231,7 @@ def handle_error(result: dict) -> None:
     elif result_code == 117:
         raise InvalidPayloadError(error_msg, result_code, result)
     else:
-        raise CircularProtocolError(f'{error_msg}: {response}', result_code, result)
+        raise CircularProtocolError(f"{error_msg}: {response}", result_code, result)
 
 
 def get_transaction_outcome(
@@ -238,7 +241,7 @@ def get_transaction_outcome(
     start: str,
     end: str,
     timeout_sec: int = 120,
-    interval_sec: int = 5
+    interval_sec: int = 5,
 ) -> dict:
     """
     Poll for transaction confirmation
@@ -266,20 +269,21 @@ def get_transaction_outcome(
         # Check if timeout exceeded
         elapsed = time.time() - start_time
         if elapsed >= timeout_sec:
-            error = f'Transaction {tx_id} timed out after {timeout_sec} seconds'
+            error = f"Transaction {tx_id} timed out after {timeout_sec} seconds"
             raise Exception(error)
 
         try:
             # Check transaction status
             tx = client.get_transaction_by_id(
-                blockchain=blockchain,
-                transaction_id=tx_id,
-                start_block=start,
-                end_block=end
+                blockchain=blockchain, transaction_id=tx_id, start_block=start, end_block=end
             )
 
             # Check if transaction is confirmed (has BlockNumber)
-            if tx.get('Response') and tx['Response'].get('BlockNumber') and tx['Response']['BlockNumber'] > 0:
+            if (
+                tx.get("Response")
+                and tx["Response"].get("BlockNumber")
+                and tx["Response"]["BlockNumber"] > 0
+            ):
                 # Transaction confirmed
                 return tx
 
@@ -288,7 +292,7 @@ def get_transaction_outcome(
 
         except Exception as error:
             # If error is not just "pending", rethrow
-            if 'pending' not in str(error).lower():
+            if "pending" not in str(error).lower():
                 raise error
 
             # Otherwise, wait and retry

@@ -30,7 +30,7 @@ from ecdsa.util import sigencode_der, sigdecode_der
 
 def hex_fix(hex_string: str) -> str:
     """Remove 0x prefix from hex string if present."""
-    if hex_string.startswith('0x') or hex_string.startswith('0X'):
+    if hex_string.startswith("0x") or hex_string.startswith("0X"):
         return hex_string[2:]
     return hex_string
 
@@ -78,7 +78,7 @@ def verify_signature(public_key: str, message: str, signature: str) -> bool:
         public_key_bytes = bytes.fromhex(hex_fix(public_key))
         # Add uncompressed point prefix if needed (0x04)
         if len(public_key_bytes) == 64:
-            public_key_bytes = b'\x04' + public_key_bytes
+            public_key_bytes = b"\x04" + public_key_bytes
 
         vk = VerifyingKey.from_string(public_key_bytes[1:], curve=SECP256k1)
 
@@ -115,7 +115,7 @@ def get_public_key(private_key: str) -> str:
     public_key_bytes = vk.to_string()  # Returns 64 bytes without 0x04 prefix
 
     # Add 04 prefix to match circular-js behavior (uncompressed point indicator)
-    return '04' + public_key_bytes.hex()
+    return "04" + public_key_bytes.hex()
 
 
 def hash_string(string: str) -> str:

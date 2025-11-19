@@ -65,44 +65,40 @@ from ._helpers import (
     get_formatted_timestamp,
 )
 
-__version__ = '1.0.8'
-__author__ = 'Circular Protocol'
-__license__ = 'MIT'
+__version__ = "1.0.8"
+__author__ = "Circular Protocol"
+__license__ = "MIT"
 
 __all__ = [
     # Main API client
-    'CircularProtocolAPI',
-
+    "CircularProtocolAPI",
     # Exceptions
-    'CircularProtocolError',
-    'APIConnectionError',
-    'APITimeoutError',
-    'AuthenticationError',
-    'InvalidParameterError',
-    'InvalidSignatureError',
-    'InvalidNonceError',
-    'InvalidPayloadError',
-    'WalletNotFoundError',
-    'TransactionError',
-    'InsufficientBalanceError',
-    'RateLimitError',
-    'ValidationError',
-
+    "CircularProtocolError",
+    "APIConnectionError",
+    "APITimeoutError",
+    "AuthenticationError",
+    "InvalidParameterError",
+    "InvalidSignatureError",
+    "InvalidNonceError",
+    "InvalidPayloadError",
+    "WalletNotFoundError",
+    "TransactionError",
+    "InsufficientBalanceError",
+    "RateLimitError",
+    "ValidationError",
     # Crypto functions
-    'sign_message',
-    'verify_signature',
-    'get_public_key',
-    'hash_string',
-
+    "sign_message",
+    "verify_signature",
+    "get_public_key",
+    "hash_string",
     # Helper functions
-    'hex_fix',
-    'string_to_hex',
-    'hex_to_string',
-    'pad_number',
-    'get_formatted_timestamp',
-
+    "hex_fix",
+    "string_to_hex",
+    "hex_to_string",
+    "pad_number",
+    "get_formatted_timestamp",
     # Metadata
-    '__version__',
-    '__author__',
-    '__license__',
+    "__version__",
+    "__author__",
+    "__license__",
 ]
