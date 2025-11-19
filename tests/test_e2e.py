@@ -541,7 +541,13 @@ if has_write_env:
             public_key = get_public_key(private_key)  # type: ignore
 
             print(f"  📝 Registering wallet on blockchain...")
-            result = api.register_wallet(blockchain, public_key)
+            try:
+                result = api.register_wallet(blockchain, public_key)
+            except Exception as e:
+                error_msg = str(e)
+                if "503" in error_msg or "All nodes are unavailable" in error_msg:
+                    pytest.skip(f"NAG API unavailable - skipping E2E test: {error_msg}")
+                raise
 
             assert result["Result"] == 200
             assert result["Response"]["TxID"] is not None
@@ -570,7 +576,13 @@ if has_write_env:
             data = f"E2E Test Data Certification {int(time.time())}"
 
             print(f"  📝 Certifying data on blockchain...")
-            result = api.certify_data(blockchain, private_key, data)
+            try:
+                result = api.certify_data(blockchain, private_key, data)
+            except Exception as e:
+                error_msg = str(e)
+                if "503" in error_msg or "All nodes are unavailable" in error_msg:
+                    pytest.skip(f"NAG API unavailable - skipping E2E test: {error_msg}")
+                raise
 
             assert result["Result"] == 200
             assert result["Response"]["TxID"] is not None
@@ -615,13 +627,19 @@ if has_write_env:
         }"""
 
             print(f"  📝 Calling smart contract function...")
-            result = api.call_contract(
-                address="0x0000000000000000000000000000000000000000000000000000000000000000",
-                blockchain=blockchain,
-                from_address=address,
-                request="0x74657374",
-                timestamp=timestamp,
-            )
+            try:
+                result = api.call_contract(
+                    address="0x0000000000000000000000000000000000000000000000000000000000000000",
+                    blockchain=blockchain,
+                    from_address=address,
+                    request="0x74657374",
+                    timestamp=timestamp,
+                )
+            except Exception as e:
+                error_msg = str(e)
+                if "503" in error_msg or "All nodes are unavailable" in error_msg:
+                    pytest.skip(f"NAG API unavailable - skipping E2E test: {error_msg}")
+                raise
 
             assert result["Result"] is not None
 
