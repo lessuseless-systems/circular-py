@@ -79,15 +79,18 @@ class CircularProtocolAPI:
         200
     """
 
-    def __init__(self, base_url: Optional[str] = None, api_key: Optional[str] = None):
+    def __init__(self, nag_url: Optional[str] = None, api_key: Optional[str] = None, base_url: Optional[str] = None):
         """
         Initialize the Circular Protocol API client.
 
         Args:
-            base_url: Base URL of the API server (default: https://api.circular.example)
+            nag_url: NAG API URL (default: https://nag.circularlabs.io/NAG.php?cep=)
             api_key: Optional API key for authentication
+            base_url: (deprecated) Alias for nag_url for backward compatibility
         """
-        self.base_url = base_url or "https://api.circular.example"
+        effective_url = nag_url or base_url or "https://nag.circularlabs.io/NAG.php?cep="
+        
+        self.base_url = effective_url
         self.api_key = api_key
         self.version = "1.0.8"
         self.session = requests.Session()
@@ -97,7 +100,7 @@ class CircularProtocolAPI:
             self.session.headers["Authorization"] = f"Bearer {self.api_key}"
 
         self.session.headers["Content-Type"] = "application/json"
-        self._nag_url = "https://nag.circularlabs.io/NAG.php?cep="
+        self._nag_url = effective_url
         self._nag_key = ""
         self._last_error = ""
 
@@ -1205,7 +1208,7 @@ class CircularProtocolAPI:
         return self.get_transaction_by_node(
             blockchain=kwargs.get("Blockchain"),
             end=kwargs.get("End"),
-            node=kwargs.get("NodeID"),
+            node=kwargs.get("Node"),
             start=kwargs.get("Start"),
         )
 
@@ -1238,8 +1241,8 @@ class CircularProtocolAPI:
         """camelCase alias for get_block_range"""
         return self.get_block_range(
             blockchain=kwargs.get("Blockchain"),
-            end=kwargs.get("End"),
-            start=kwargs.get("Start"),
+            end=kwargs.get("EndBlock"),
+            start=kwargs.get("StartBlock"),
         )
 
     def getBlockCount(self, **kwargs) -> GetBlockCountResponse:
@@ -1259,14 +1262,14 @@ class CircularProtocolAPI:
         return self.test_contract(
             blockchain=kwargs.get("Blockchain"),
             from_address=kwargs.get("From"),
-            project=kwargs.get("Project"),
+            project=kwargs.get("ContractAddress") or kwargs.get("Project"),
             timestamp=kwargs.get("Timestamp"),
         )
 
     def callContract(self, **kwargs) -> CallContractResponse:
         """camelCase alias for call_contract"""
         return self.call_contract(
-            address=kwargs.get("Address"),
+            address=kwargs.get("ContractAddress") or kwargs.get("Address"),
             blockchain=kwargs.get("Blockchain"),
             from_address=kwargs.get("From"),
             request=kwargs.get("Request"),
@@ -1297,7 +1300,7 @@ class CircularProtocolAPI:
         """camelCase alias for get_voucher"""
         return self.get_voucher(
             blockchain=kwargs.get("Blockchain"),
-            code=kwargs.get("Code"),
+            code=kwargs.get("VoucherID") or kwargs.get("Code"),
         )
 
     def getDomain(self, **kwargs) -> GetDomainResponse:

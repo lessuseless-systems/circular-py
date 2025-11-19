@@ -23,6 +23,20 @@ API_URL = os.getenv("CIRCULAR_API_URL", "http://localhost:8080")
 API_VERSION = "1.0.8"
 
 
+@pytest.fixture(scope="session", autouse=True)
+def require_api_server():
+    """Skip integration tests when the API server is not available."""
+    try:
+        response = requests.get(API_URL, timeout=2)
+        # If we get a 503, the API is down - skip tests
+        if response.status_code == 503:
+            pytest.skip(f"API at {API_URL} returned 503 Service Unavailable - skipping integration tests")
+    except requests.exceptions.ConnectionError:
+        pytest.skip(f"API not reachable at {API_URL}")
+    except requests.exceptions.Timeout:
+        pytest.skip(f"API timeout at {API_URL}")
+
+
 class TestCircularProtocolIntegration:
     """Integration test suite for Circular Protocol SDK"""
 
@@ -37,13 +51,6 @@ class TestNetworkAPI(TestCircularProtocolIntegration):
 
     from circular_protocol_api import APIConnectionError, ValidationError  # use specific exceptions
 
-    @pytest.fixture(scope="session", autouse=True)
-    def require_server():
-        """Skip integration tests when the mock server is not available."""
-        try:
-            requests.get(API_URL, timeout=2)
-        except Exception:
-            pytest.skip(f"Mock API not reachable at {API_URL}")
     def test_get_blockchains(self, api):
         """Should list supported blockchains"""
         result = api.getBlockchains(**{"Version": "1.0.8"})

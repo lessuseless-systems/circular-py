@@ -53,7 +53,7 @@ class TestWalletAPIUnit:
 
         mock_session.assert_called_once()
         call_args = mock_session.call_args
-        assert call_args[0][0] == "https://nag.circularlabs.io/NAG.php?cep=Circular_CheckWallet_"
+        assert call_args[0][0] == f"{TEST_URL}Circular_CheckWallet_"
         assert call_args[1]["json"]["Blockchain"] == "MainNet"
         assert call_args[1]["json"]["Address"] == "0xtest"
         assert call_args[1]["json"]["Version"] == API_VERSION
