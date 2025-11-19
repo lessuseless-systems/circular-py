@@ -174,6 +174,45 @@ The Circular Protocol Python SDK provides **39 methods** across multiple categor
 > **Note**: For detailed parameter types, response structures, and advanced usage examples, refer to the **[Python SDK Documentation](https://circular-protocol.gitbook.io/circular-sdk/api-docs/python)**.
 
 ## 🤝 Contributing
+## 🛠 Development
+
+This repository uses Nix to provide a predictable development environment. Run the dev shell like this:
+
+```bash
+nix develop
+# or run the curated commands printed by the dev shell
+nix run  # runs the default test command
+```
+
+Troubleshooting: If you see an error like "cannot connect to socket at '/nix/var/nix/daemon-socket/socket': Connection refused",
+it means the `nix-daemon` service is not running (common inside containers where `systemd` is not active).
+
+First try the helper script included in this repository to automatically start the daemon in such cases:
+
+```bash
+./scripts/ensure-nix-daemon.sh
+nix develop
+```
+
+If that fails, and if you're able to run `systemd` services or have `systemctl`, you can start the daemon like this:
+
+```bash
+sudo systemctl start nix-daemon.service
+```
+If you're not running systemd (codespaces), then you can try running this:
+
+```bash
+sudo $(which nix-daemon) &
+```
+
+Alternatively, you can start the nix-daemon manually:
+
+```bash
+sudo /nix/var/nix/profiles/default/bin/nix-daemon &
+```
+
+This should resolve the socket connection error in most development containers. If you continue to see issues, please open an issue with the environment details and error output.
+
 
 Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for guidelines.
 
