@@ -30,6 +30,7 @@
 
           # Development dependencies
           pytest
+          pytest-timeout
           pytest-cov
           pytest-asyncio
           black
