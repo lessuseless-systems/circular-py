@@ -164,7 +164,16 @@ def _run_api_test(
     """
     kwargs = _process_request_template(request_template)
     method = getattr(api, method_name)
-    result = method(**kwargs)
+    
+    try:
+        result = method(**kwargs)
+    except Exception as e:
+        # Handle 503 Service Unavailable or "All nodes are unavailable" errors
+        error_msg = str(e)
+        if "503" in error_msg or "All nodes are unavailable" in error_msg:
+            pytest.skip(f"NAG API unavailable - skipping E2E test: {error_msg}")
+        # Re-raise any other exceptions
+        raise
 
     # Check if NAG returned "All nodes are unavailable" error
     if isinstance(result.get("Response"), str) and "All nodes are unavailable" in result["Response"]:
