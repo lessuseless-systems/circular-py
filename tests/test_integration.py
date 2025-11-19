@@ -31,6 +31,14 @@ def require_api_server():
         # If we get a 503, the API is down - skip tests
         if response.status_code == 503:
             pytest.skip(f"API at {API_URL} returned 503 Service Unavailable - skipping integration tests")
+        # Check if the response contains the "All nodes are unavailable" message
+        try:
+            data = response.json()
+            if isinstance(data, dict) and isinstance(data.get("Response"), str):
+                if "All nodes are unavailable" in data["Response"]:
+                    pytest.skip("NAG returned 'All nodes are unavailable' - skipping integration tests")
+        except (ValueError, KeyError):
+            pass
     except requests.exceptions.ConnectionError:
         pytest.skip(f"API not reachable at {API_URL}")
     except requests.exceptions.Timeout:

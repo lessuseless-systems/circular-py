@@ -166,6 +166,10 @@ def _run_api_test(
     method = getattr(api, method_name)
     result = method(**kwargs)
 
+    # Check if NAG returned "All nodes are unavailable" error
+    if isinstance(result.get("Response"), str) and "All nodes are unavailable" in result["Response"]:
+        pytest.skip("NAG returned 'All nodes are unavailable' - skipping E2E tests")
+
     if custom_assertion:
         custom_assertion(result)
     else:
