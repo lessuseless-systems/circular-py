@@ -87,6 +87,7 @@ def _process_request_template(template_str: str) -> dict:
         dict: Processed request with env vars replaced and Version removed
     """
     import json
+    import re
 
     # Replace environment variable placeholders
     processed = template_str.replace(
@@ -102,17 +103,47 @@ def _process_request_template(template_str: str) -> dict:
     request = json.loads(processed)
 
     # Convert PascalCase keys to snake_case and remove Version
+    # Mapping for special cases
+    key_mapping = {
+        "Address": "address",
+        "Blockchain": "blockchain",
+        "Asset": "asset",
+        "Version": None,  # Skip Version
+        "AssetName": "asset_name",
+        "Limit": "limit",
+        "EndDate": "final_date",
+        "StartDate": "initial_date",
+        "End": "end",
+        "Start": "start",
+        "EndBlock": "end",
+        "StartBlock": "start",
+        "BlockNumber": "block_number",
+        "Block": "block_number",
+        "VoucherID": "code",
+        "Code": "code",
+        "ContractAddress": "contract_address",
+        "Method": "method",
+        "Parameters": "parameters",
+        "From": "from_address",
+        "Request": "request",
+        "Timestamp": "timestamp",
+        "TransactionID": "transaction_id",
+        "ID": "transaction_id",
+        "NodeID": "node",
+        "Domain": "domain",
+        "Project": "project",
+    }
+
     kwargs = {}
     for k, v in request.items():
-        if k == "Version":
-            continue
-        # Simple snake_case conversion: Address -> address, BlockNumber -> block_number
-        if not any(c.isupper() for c in k[1:]):
-            # Simple case: only first char is uppercase
-            snake_key = k[0].lower() + k[1:]
+        if k in key_mapping:
+            snake_key = key_mapping[k]
+            if snake_key is None:
+                continue
         else:
-            # Complex case: multiple uppercase chars
-            snake_key = "".join(["_" + c.lower() if c.isupper() else c for c in k]).lstrip("_")
+            # Auto-convert PascalCase to snake_case: BlockCount -> block_count
+            snake_key = re.sub(r'(?<!^)(?=[A-Z])', '_', k).lower()
+        
         kwargs[snake_key] = v
 
     return kwargs
@@ -225,6 +256,7 @@ if has_read_env:
                 "get_pending_transaction",
                 """{
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
+          "ID": "0x0000000000000000000000000000000000000000000000000000000000000000",
           "Version": "1.0.8"
         }""",
                 "Get pending transactions",
@@ -234,10 +266,12 @@ if has_read_env:
             """E2E: Get transactions by wallet address"""
             _run_api_test(
                 api,
-                "get_transactionby_address",
+                "get_transaction_by_address",
                 """{
           "Address": "${CIRCULAR_TEST_ADDRESS}",
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
+          "Start": "1",
+          "End": "10",
           "Version": "1.0.8"
         }""",
                 "Get transactions by wallet address",
@@ -247,8 +281,9 @@ if has_read_env:
             """E2E: Get transactions by date range"""
             _run_api_test(
                 api,
-                "get_transactionby_date",
+                "get_transaction_by_date",
                 """{
+          "Address": "${CIRCULAR_TEST_ADDRESS}",
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "EndDate": "2024-12-31",
           "StartDate": "2024-01-01",
@@ -261,10 +296,12 @@ if has_read_env:
             """E2E: Get transaction by transaction ID"""
             _run_api_test(
                 api,
-                "get_transactionby_i_d",
+                "get_transaction_by_id",
                 """{
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
           "TransactionID": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "Start": "1",
+          "End": "10",
           "Version": "1.0.8"
         }""",
                 "Get transaction by transaction ID",
@@ -274,9 +311,11 @@ if has_read_env:
             """E2E: Get transactions by node ID"""
             _run_api_test(
                 api,
-                "get_transactionby_node",
+                "get_transaction_by_node",
                 """{
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
+          "Start": "1",
+          "End": "100",
           "NodeID": "node-0001",
           "Version": "1.0.8"
         }""",
@@ -404,8 +443,8 @@ if has_read_env:
                 "get_block_range",
                 """{
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
-          "EndBlock": 10,
-          "StartBlock": 1,
+          "End": "10",
+          "Start": "1",
           "Version": "1.0.8"
         }""",
                 "Retrieve range of blocks",
@@ -432,14 +471,28 @@ if has_read_env:
         # E2E tests for Contract API methods (Read-Only)
         def test_test_contract(self, api):
             """E2E: Test smart contract execution (simulation)"""
+            from circular_protocol_api._crypto import get_public_key, hash_string
+            
+            # Get a valid test address from private key if available
+            private_key = os.getenv("CIRCULAR_PRIVATE_KEY")
+            if private_key:
+                public_key = get_public_key(private_key)
+                from_addr = hash_string(public_key)
+            else:
+                from_addr = "${CIRCULAR_TEST_ADDRESS}"
+            
+            # Get current timestamp
+            from datetime import datetime
+            timestamp = datetime.utcnow().strftime("%Y:%m:%d-%H:%M:%S")
+            
             _run_api_test(
                 api,
                 "test_contract",
                 """{
           "Blockchain": "${CIRCULAR_TEST_BLOCKCHAIN}",
-          "ContractAddress": "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "Method": "testMethod",
-          "Parameters": "{}",
+          "From": \"""" + from_addr + """\",
+          "Project": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "Timestamp": \"""" + timestamp + """\",
           "Version": "1.0.8"
         }""",
                 "Test smart contract execution (simulation)",
@@ -522,25 +575,31 @@ if has_write_env:
             address = hash_string(public_key)
 
             # Format timestamp
-            timestamp = datetime.utcnow().strftime("%%Y:%%m:%%d-%%H:%%M:%%S")
+            timestamp = datetime.utcnow().strftime("%Y:%m:%d-%H:%M:%S")
 
             blockchain = os.getenv(
                 "CIRCULAR_TEST_BLOCKCHAIN",
                 "0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2",
             )
 
-            # Build callContract request
-            request = {
-                "Blockchain": blockchain,
-                "From": address,
-                "Address": "0x0000000000000000000000000000000000000000000000000000000000000000",
-                "Request": "0x74657374",
-                "Timestamp": timestamp,
-                "Version": "1.0.8",
-            }
+            # Build callContract request and use helper to process it
+            request_template = """{
+          "Blockchain": "placeholder",
+          "From": "placeholder",
+          "Address": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "Request": "0x74657374",
+          "Timestamp": "placeholder",
+          "Version": "1.0.8"
+        }"""
 
             print(f"  📝 Calling smart contract function...")
-            result = api.call_contract(**{k.lower(): v for k, v in request.items()})
+            result = api.call_contract(
+                address="0x0000000000000000000000000000000000000000000000000000000000000000",
+                blockchain=blockchain,
+                from_address=address,
+                request="0x74657374",
+                timestamp=timestamp,
+            )
 
             assert result["Result"] is not None
 
