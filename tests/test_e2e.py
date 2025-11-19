@@ -516,13 +516,16 @@ if has_write_env:
 
             # Get environment variables
             private_key = os.getenv("CIRCULAR_PRIVATE_KEY")
+            if not private_key:
+                pytest.skip("CIRCULAR_PRIVATE_KEY environment variable not set")
+            
             blockchain = os.getenv(
                 "CIRCULAR_TEST_BLOCKCHAIN",
                 "0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2",
             )
 
             # Derive public key
-            public_key = get_public_key(private_key)
+            public_key = get_public_key(private_key)  # type: ignore
 
             print(f"  📝 Registering wallet on blockchain...")
             result = api.register_wallet(blockchain, public_key)
@@ -542,6 +545,9 @@ if has_write_env:
 
             # Get environment variables
             private_key = os.getenv("CIRCULAR_PRIVATE_KEY")
+            if not private_key:
+                pytest.skip("CIRCULAR_PRIVATE_KEY environment variable not set")
+            
             blockchain = os.getenv(
                 "CIRCULAR_TEST_BLOCKCHAIN",
                 "0x8a20baa40c45dc5055aeb26197c203e576ef389d9acb171bd62da11dc5ad72b2",
@@ -571,7 +577,10 @@ if has_write_env:
 
             # Derive address and public key from private key
             private_key = os.getenv("CIRCULAR_PRIVATE_KEY")
-            public_key = get_public_key(private_key)
+            if not private_key:
+                pytest.skip("CIRCULAR_PRIVATE_KEY environment variable not set")
+            
+            public_key = get_public_key(private_key)  # type: ignore
             address = hash_string(public_key)
 
             # Format timestamp
