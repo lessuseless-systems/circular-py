@@ -472,22 +472,26 @@ class CircularProtocolAPI:
 
     def check_wallet(self, address: str, blockchain: str) -> CheckWalletResponse:
         """
-                Check if wallet exists
+        Check if wallet exists
 
-                Checks whether a wallet address exists on the specified blockchain.
+        Checks whether a wallet address exists on the specified blockchain.
         Returns existence status and confirms the address format.
 
-                Args:
-                    address: Address parameter
-                    blockchain: Blockchain parameter
+        Args:
+            address: Address parameter
+            blockchain: Blockchain parameter
 
-                Returns:
-                    CheckWalletResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            CheckWalletResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> result = api.check_wallet('0x742d35...', 'MainNet')
+            >>> print(f"Exists: {result['Response']}")
         """
         data = {
             "Address": address,
@@ -498,22 +502,26 @@ class CircularProtocolAPI:
 
     def get_wallet(self, address: str, blockchain: str) -> GetWalletResponse:
         """
-                Get wallet information
+        Get wallet information
 
-                Retrieves complete wallet information including balance and nonce.
+        Retrieves complete wallet information including balance and nonce.
         Returns all wallet properties including current state on the blockchain.
 
-                Args:
-                    address: Address parameter
-                    blockchain: Blockchain parameter
+        Args:
+            address: Address parameter
+            blockchain: Blockchain parameter
 
-                Returns:
-                    GetWalletResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            GetWalletResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> wallet = api.get_wallet('0x742d35...', 'MainNet')
+            >>> print(f"Balance: {wallet['Response']['Balance']}")
         """
         data = {
             "Address": address,
@@ -526,22 +534,27 @@ class CircularProtocolAPI:
         self, address: str, blockchain: str
     ) -> GetLatestTransactionsResponse:
         """
-                Get latest transactions for wallet
+        Get latest transactions for wallet
 
-                Retrieves the latest transactions for a wallet address.
+        Retrieves the latest transactions for a wallet address.
         Returns an array of transaction objects with details.
 
-                Args:
-                    address: Address parameter
-                    blockchain: Blockchain parameter
+        Args:
+            address: Address parameter
+            blockchain: Blockchain parameter
 
-                Returns:
-                    GetLatestTransactionsResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            GetLatestTransactionsResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> txs = api.get_latest_transactions('0x742d35...', 'MainNet')
+            >>> for tx in txs['Response']:
+            ...     print(f"TxID: {tx['ID']}")
         """
         data = {
             "Address": address,
@@ -554,23 +567,27 @@ class CircularProtocolAPI:
         self, address: str, asset: str, blockchain: str
     ) -> GetWalletBalanceResponse:
         """
-                Get wallet balance for specific asset
+        Get wallet balance for specific asset
 
-                Retrieves the balance of a specified asset in a wallet.
+        Retrieves the balance of a specified asset in a wallet.
         Returns the balance amount for the requested asset.
 
-                Args:
-                    address: Address parameter
-                    asset: Asset parameter
-                    blockchain: Blockchain parameter
+        Args:
+            address: Address parameter
+            asset: Asset parameter
+            blockchain: Blockchain parameter
 
-                Returns:
-                    GetWalletBalanceResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            GetWalletBalanceResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> balance = api.get_wallet_balance('0x742d35...', 'CIRX', 'MainNet')
+            >>> print(f"Balance: {balance['Response']}")
         """
         data = {
             "Address": address,
@@ -582,22 +599,26 @@ class CircularProtocolAPI:
 
     def get_wallet_nonce(self, address: str, blockchain: str) -> GetWalletNonceResponse:
         """
-                Get wallet nonce
+        Get wallet nonce
 
-                Retrieves the nonce (transaction counter) of a wallet.
+        Retrieves the nonce (transaction counter) of a wallet.
         The nonce is used for transaction ordering and must increment with each transaction.
 
-                Args:
-                    address: Address parameter
-                    blockchain: Blockchain parameter
+        Args:
+            address: Address parameter
+            blockchain: Blockchain parameter
 
-                Returns:
-                    GetWalletNonceResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            GetWalletNonceResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> nonce = api.get_wallet_nonce('0x742d35...', 'MainNet')
+            >>> print(f"Nonce: {nonce['Response']['Nonce']}")
         """
         data = {
             "Address": address,
@@ -619,29 +640,42 @@ class CircularProtocolAPI:
         tx_type: str,
     ) -> AddTransactionResponse:
         """
-                Submit transaction to blockchain
+        Submit transaction to blockchain
 
-                Submits a transaction to the blockchain. Requires a complete signed transaction
+        Submits a transaction to the blockchain. Requires a complete signed transaction
         including ID, addresses, payload, nonce, and signature.
 
-                Args:
-                    blockchain: Blockchain parameter
-                    from_address: From parameter
-                    transaction_id: ID parameter
-                    nonce: Nonce parameter
-                    payload: Payload parameter
-                    signature: Signature parameter
-                    timestamp: Timestamp parameter
-                    to_address: To parameter
-                    tx_type: Type parameter
+        Args:
+            blockchain: Blockchain parameter
+            from_address: From parameter
+            transaction_id: ID parameter
+            nonce: Nonce parameter
+            payload: Payload parameter
+            signature: Signature parameter
+            timestamp: Timestamp parameter
+            to_address: To parameter
+            tx_type: Type parameter
 
-                Returns:
-                    AddTransactionResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            AddTransactionResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> result = api.send_transaction(
+            ...     blockchain='MainNet',
+            ...     from_address='...',
+            ...     transaction_id='...',
+            ...     nonce='0',
+            ...     payload='...',
+            ...     signature='...',
+            ...     timestamp='...',
+            ...     to_address='...',
+            ...     tx_type='C_TYPE_TRANSFER'
+            ... )
         """
         data = {
             "Blockchain": blockchain,
@@ -657,26 +691,75 @@ class CircularProtocolAPI:
         }
         return self._make_request("AddTransaction", data)
 
+    def send_batch(self, transactions: list) -> dict:
+        """
+        Send a Batch of Transactions
+
+        Args:
+            transactions: List of transaction objects
+
+        Returns:
+            dict: The parsed JSON response or error object
+        """
+        data = {"Transactions": transactions}
+        url = f"{self._nag_url}Circular_AddBatch_"
+
+        headers = {
+            "Content-Type": "application/json",
+            **self.headers,
+        }
+
+        # Add NAG key if set
+        if self._nag_key:
+            headers["X-NAG-Key"] = self._nag_key
+
+        try:
+            # Set timeout to 120 seconds
+            response = requests.post(url, json=data, headers=headers, timeout=120)
+
+            if not response.ok:
+                return {
+                    "success": False,
+                    "message": "Server unreachable or request timeout",
+                    "error": f"API error: {response.status_code} {response.reason}",
+                }
+
+            try:
+                return response.json()
+            except ValueError:
+                return {"status": response.status_code, "message": response.text}
+
+        except Exception as e:
+            return {
+                "success": False,
+                "message": "Server unreachable or request timeout",
+                "error": str(e),
+            }
+
     def get_pending_transaction(
         self, blockchain: str, transaction_id: str
     ) -> GetPendingTransactionResponse:
         """
-                Get pending transaction by ID
+        Get pending transaction by ID
 
-                Searches for a transaction by ID among pending transactions.
+        Searches for a transaction by ID among pending transactions.
         Returns the transaction if it exists and is still pending.
 
-                Args:
-                    blockchain: Blockchain parameter
-                    transaction_id: ID parameter
+        Args:
+            blockchain: Blockchain parameter
+            transaction_id: ID parameter
 
-                Returns:
-                    GetPendingTransactionResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            GetPendingTransactionResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> tx = api.get_pending_transaction('MainNet', '64f2...')
+            >>> print(f"Status: {tx['Response']['Status']}")
         """
         data = {
             "Blockchain": blockchain,
@@ -689,24 +772,28 @@ class CircularProtocolAPI:
         self, blockchain: str, end: str, transaction_id: str, start: str
     ) -> GetTransactionbyIDResponse:
         """
-                Find transaction by ID
+        Find transaction by ID
 
-                Finds a transaction by ID within a specified block range.
+        Finds a transaction by ID within a specified block range.
         Searches through blocks to locate the transaction.
 
-                Args:
-                    blockchain: Blockchain parameter
-                    end: End parameter
-                    transaction_id: ID parameter
-                    start: Start parameter
+        Args:
+            blockchain: Blockchain parameter
+            end: End parameter
+            transaction_id: ID parameter
+            start: Start parameter
 
-                Returns:
-                    GetTransactionbyIDResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            GetTransactionbyIDResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> tx = api.get_transaction_by_id('MainNet', '0', '64f2...', '10')
+            >>> print(f"Found in block: {tx['Response']['Block']}")
         """
         data = {
             "Blockchain": blockchain,
@@ -721,24 +808,27 @@ class CircularProtocolAPI:
         self, blockchain: str, end: str, node: str, start: str
     ) -> GetTransactionbyNodeResponse:
         """
-                Find transactions by node ID
+        Find transactions by node ID
 
-                Finds transactions by node ID within a specified block range.
+        Finds transactions by node ID within a specified block range.
         Returns all transactions associated with the node.
 
-                Args:
-                    blockchain: Blockchain parameter
-                    end: End parameter
-                    node: NodeID parameter
-                    start: Start parameter
+        Args:
+            blockchain: Blockchain parameter
+            end: End parameter
+            node: NodeID parameter
+            start: Start parameter
 
-                Returns:
-                    GetTransactionbyNodeResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            GetTransactionbyNodeResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> txs = api.get_transaction_by_node('MainNet', '0', 'node1', '10')
         """
         data = {
             "Blockchain": blockchain,
@@ -753,24 +843,27 @@ class CircularProtocolAPI:
         self, address: str, blockchain: str, end: str, start: str
     ) -> GetTransactionbyAddressResponse:
         """
-                Find transactions by address
+        Find transactions by address
 
-                Finds transactions by wallet address within a specified block range.
+        Finds transactions by wallet address within a specified block range.
         Returns transactions where the address is sender or recipient.
 
-                Args:
-                    address: Address parameter
-                    blockchain: Blockchain parameter
-                    end: End parameter
-                    start: Start parameter
+        Args:
+            address: Address parameter
+            blockchain: Blockchain parameter
+            end: End parameter
+            start: Start parameter
 
-                Returns:
-                    GetTransactionbyAddressResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            GetTransactionbyAddressResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> txs = api.get_transaction_by_address('0x742d35...', 'MainNet', '0', '10')
         """
         data = {
             "Address": address,
@@ -785,24 +878,32 @@ class CircularProtocolAPI:
         self, address: str, blockchain: str, final_date: str, initial_date: str
     ) -> GetTransactionbyDateResponse:
         """
-                Find transactions by date range
+        Find transactions by date range
 
-                Finds transactions by wallet address within a specified date range.
+        Finds transactions by wallet address within a specified date range.
         Returns all transactions for the address between the dates.
 
-                Args:
-                    address: Address parameter
-                    blockchain: Blockchain parameter
-                    final_date: EndDate parameter
-                    initial_date: StartDate parameter
+        Args:
+            address: Address parameter
+            blockchain: Blockchain parameter
+            final_date: EndDate parameter
+            initial_date: StartDate parameter
 
-                Returns:
-                    GetTransactionbyDateResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            GetTransactionbyDateResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> txs = api.get_transaction_by_date(
+            ...     '0x742d35...',
+            ...     'MainNet',
+            ...     '2023-12-31',
+            ...     '2023-01-01'
+            ... )
         """
         data = {
             "Address": address,
@@ -815,22 +916,26 @@ class CircularProtocolAPI:
 
     def get_block(self, block_number: str, blockchain: str) -> GetBlockResponse:
         """
-                Get specific block
+        Get specific block
 
-                Retrieves a desired block by block number.
+        Retrieves a desired block by block number.
         Returns complete block information including transactions and hash.
 
-                Args:
-                    block_number: BlockNumber parameter
-                    blockchain: Blockchain parameter
+        Args:
+            block_number: BlockNumber parameter
+            blockchain: Blockchain parameter
 
-                Returns:
-                    GetBlockResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            GetBlockResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> block = api.get_block('12345', 'MainNet')
+            >>> print(f"Hash: {block['Response']['Hash']}")
         """
         data = {
             "BlockNumber": block_number,
@@ -841,23 +946,27 @@ class CircularProtocolAPI:
 
     def get_block_range(self, blockchain: str, end: str, start: str) -> GetBlockRangeResponse:
         """
-                Get range of blocks
+        Get range of blocks
 
-                Retrieves all blocks in a specified range.
+        Retrieves all blocks in a specified range.
         If End = 0, then Start is the number of blocks from the last one minted going backward.
 
-                Args:
-                    blockchain: Blockchain parameter
-                    end: End parameter
-                    start: Start parameter
+        Args:
+            blockchain: Blockchain parameter
+            end: End parameter
+            start: Start parameter
 
-                Returns:
-                    GetBlockRangeResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            GetBlockRangeResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> # Get last 10 blocks
+            >>> blocks = api.get_block_range('MainNet', '0', '10')
         """
         data = {
             "Blockchain": blockchain,
@@ -869,21 +978,25 @@ class CircularProtocolAPI:
 
     def get_block_count(self, blockchain: str) -> GetBlockCountResponse:
         """
-                Get blockchain height
+        Get blockchain height
 
-                Retrieves the blockchain block height (total number of blocks).
+        Retrieves the blockchain block height (total number of blocks).
         Also known as getBlockHeight in some documentation.
 
-                Args:
-                    blockchain: Blockchain parameter
+        Args:
+            blockchain: Blockchain parameter
 
-                Returns:
-                    GetBlockCountResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            GetBlockCountResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> height = api.get_block_count('MainNet')
+            >>> print(f"Height: {height['Response']}")
         """
         data = {
             "Blockchain": blockchain,
@@ -891,23 +1004,26 @@ class CircularProtocolAPI:
         }
         return self._make_request("GetBlockCount", data)
 
-    def get_analytics(self, blockchain: str) -> GetAnalyticsResponse:
         """
-                Get blockchain analytics
+        Get blockchain analytics
 
-                Retrieves blockchain analytics and statistics.
+        Retrieves blockchain analytics and statistics.
         Returns comprehensive information about the blockchain state.
 
-                Args:
-                    blockchain: Blockchain parameter
+        Args:
+            blockchain: Blockchain parameter
 
-                Returns:
-                    GetAnalyticsResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            GetAnalyticsResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> stats = api.get_analytics('MainNet')
+            >>> print(f"Active Nodes: {stats['Response']['ActiveNodes']}")
         """
         data = {
             "Blockchain": blockchain,
@@ -919,24 +1035,32 @@ class CircularProtocolAPI:
         self, blockchain: str, from_address: str, project: str, timestamp: str
     ) -> TestContractResponse:
         """
-                Test smart contract execution
+        Test smart contract execution
 
-                Tests smart contract execution locally without sending a transaction.
+        Tests smart contract execution locally without sending a transaction.
         Useful for testing contract logic before deploying or executing.
 
-                Args:
-                    blockchain: Blockchain parameter
-                    from_address: From parameter
-                    project: Project parameter
-                    timestamp: Timestamp parameter
+        Args:
+            blockchain: Blockchain parameter
+            from_address: From parameter
+            project: Project parameter
+            timestamp: Timestamp parameter
 
-                Returns:
-                    TestContractResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            TestContractResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> result = api.test_contract(
+            ...     'MainNet',
+            ...     '0x742d35...',
+            ...     'MyProject',
+            ...     '2023-01-01 12:00:00'
+            ... )
         """
         data = {
             "Blockchain": blockchain,
@@ -951,25 +1075,34 @@ class CircularProtocolAPI:
         self, address: str, blockchain: str, from_address: str, request: str, timestamp: str
     ) -> CallContractResponse:
         """
-                Call smart contract function
+        Call smart contract function
 
-                Calls a smart contract function on the blockchain.
+        Calls a smart contract function on the blockchain.
         Executes the specified function with provided parameters.
 
-                Args:
-                    address: Address parameter
-                    blockchain: Blockchain parameter
-                    from_address: From parameter
-                    request: Request parameter
-                    timestamp: Timestamp parameter
+        Args:
+            address: Address parameter
+            blockchain: Blockchain parameter
+            from_address: From parameter
+            request: Request parameter
+            timestamp: Timestamp parameter
 
-                Returns:
-                    CallContractResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            CallContractResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> result = api.call_contract(
+            ...     '0xContractAddress...',
+            ...     'MainNet',
+            ...     '0xSenderAddress...',
+            ...     'functionName(arg1)',
+            ...     '2023-01-01 12:00:00'
+            ... )
         """
         data = {
             "Address": address,
@@ -983,21 +1116,26 @@ class CircularProtocolAPI:
 
     def get_asset_list(self, blockchain: str) -> GetAssetListResponse:
         """
-                List all assets on blockchain
+        List all assets on blockchain
 
-                Retrieves the list of all assets minted on a specific blockchain.
+        Retrieves the list of all assets minted on a specific blockchain.
         Returns an array of asset information.
 
-                Args:
-                    blockchain: Blockchain parameter
+        Args:
+            blockchain: Blockchain parameter
 
-                Returns:
-                    GetAssetListResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            GetAssetListResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> assets = api.get_asset_list('MainNet')
+            >>> for asset in assets['Response']:
+            ...     print(f"Asset: {asset['Name']}")
         """
         data = {
             "Blockchain": blockchain,
@@ -1007,22 +1145,26 @@ class CircularProtocolAPI:
 
     def get_asset(self, asset_name: str, blockchain: str) -> GetAssetResponse:
         """
-                Get specific asset information
+        Get specific asset information
 
-                Retrieves an asset descriptor with complete asset information.
+        Retrieves an asset descriptor with complete asset information.
         Returns detailed information about the specified asset.
 
-                Args:
-                    asset_name: AssetName parameter
-                    blockchain: Blockchain parameter
+        Args:
+            asset_name: AssetName parameter
+            blockchain: Blockchain parameter
 
-                Returns:
-                    GetAssetResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            GetAssetResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> asset = api.get_asset('CIRX', 'MainNet')
+            >>> print(f"Decimals: {asset['Response']['Decimals']}")
         """
         data = {
             "AssetName": asset_name,
@@ -1033,22 +1175,26 @@ class CircularProtocolAPI:
 
     def get_asset_supply(self, asset_name: str, blockchain: str) -> GetAssetSupplyResponse:
         """
-                Get asset supply information
+        Get asset supply information
 
-                Retrieves the total, circulating, and residual supply of a specified asset.
+        Retrieves the total, circulating, and residual supply of a specified asset.
         Returns comprehensive supply metrics.
 
-                Args:
-                    asset_name: AssetName parameter
-                    blockchain: Blockchain parameter
+        Args:
+            asset_name: AssetName parameter
+            blockchain: Blockchain parameter
 
-                Returns:
-                    GetAssetSupplyResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            GetAssetSupplyResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> supply = api.get_asset_supply('CIRX', 'MainNet')
+            >>> print(f"Circulating: {supply['Response']['CirculatingSupply']}")
         """
         data = {
             "AssetName": asset_name,
@@ -1059,22 +1205,26 @@ class CircularProtocolAPI:
 
     def get_voucher(self, blockchain: str, code: str) -> GetVoucherResponse:
         """
-                Retrieve voucher information
+        Retrieve voucher information
 
-                Retrieves an existing voucher by code.
+        Retrieves an existing voucher by code.
         Code is automatically stripped of 0x prefix if present.
 
-                Args:
-                    blockchain: Blockchain parameter
-                    code: Code parameter
+        Args:
+            blockchain: Blockchain parameter
+            code: Code parameter
 
-                Returns:
-                    GetVoucherResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            GetVoucherResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> voucher = api.get_voucher('MainNet', '0x1234...')
+            >>> print(f"Value: {voucher['Response']['Value']}")
         """
         data = {
             "Blockchain": blockchain,
@@ -1085,23 +1235,27 @@ class CircularProtocolAPI:
 
     def get_domain(self, blockchain: str, domain: str) -> GetDomainResponse:
         """
-                Resolve domain to wallet address
+        Resolve domain to wallet address
 
-                Resolves a domain name to a wallet address.
+        Resolves a domain name to a wallet address.
         A single wallet can have multiple domain associations.
         Also known as resolveDomain.
 
-                Args:
-                    blockchain: Blockchain parameter
-                    domain: Domain parameter
+        Args:
+            blockchain: Blockchain parameter
+            domain: Domain parameter
 
-                Returns:
-                    GetDomainResponse: Dict containing the API response with Result and Response fields
+        Returns:
+            GetDomainResponse: Dict containing the API response with Result and Response fields
 
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
+
+        Example:
+            >>> domain = api.get_domain('MainNet', 'mywallet.cirx')
+            >>> print(f"Address: {domain['Response']['Address']}")
         """
         data = {
             "Blockchain": blockchain,
@@ -1112,21 +1266,23 @@ class CircularProtocolAPI:
 
     def get_blockchains(self) -> GetBlockchainsResponse:
         """
-                List available blockchains
+        List available blockchains
 
-                Retrieves the list of blockchains available in the network.
+        Retrieves the list of blockchains available in the network.
         Returns information about all active and inactive blockchains.
 
-                Args:
+        Returns:
+            GetBlockchainsResponse: Dict containing the API response with Result and Response fields
 
+        Raises:
+            CircularProtocolError: If the API request fails
+            APIConnectionError: If unable to connect to the API
+            APITimeoutError: If the request times out
 
-                Returns:
-                    GetBlockchainsResponse: Dict containing the API response with Result and Response fields
-
-                Raises:
-                    CircularProtocolError: If the API request fails
-                    APIConnectionError: If unable to connect to the API
-                    APITimeoutError: If the request times out
+        Example:
+            >>> chains = api.get_blockchains()
+            >>> for chain in chains['Response']:
+            ...     print(f"Chain: {chain['Name']}")
         """
         data = {
             "Version": self.version,
